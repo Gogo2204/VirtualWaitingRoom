@@ -87,7 +87,7 @@ response = requests.post(
         "Content-Type": "application/json",
     },
     json={
-        "model": "anthropic/claude-haiku-4.5",
+        "model": "anthropic/claude-sonnet-4.5",
         "messages": [{"role": "user", "content": prompt}],
     },
     timeout=120,
