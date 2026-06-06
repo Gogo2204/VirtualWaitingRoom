@@ -17,10 +17,6 @@ class AuthService
 
         $user = $this->userModel->findByEmail($email);
 
-        error_log('RAW PASSWORD: ' . var_export($password, true));
-        error_log('HASH FROM DB: ' . var_export($user['password_hash'], true));
-        error_log('VERIFY: ' . var_export(password_verify($password, $user['password_hash']), true));
-
         if (!$user || !password_verify($password, $user['password_hash'])) {
             throw new \RuntimeException('Invalid credentials.', 401);
         }
