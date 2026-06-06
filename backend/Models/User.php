@@ -1,0 +1,61 @@
+<?php
+
+class User extends Model
+{
+    protected string $table = 'users';
+
+    public function create(array $data): int
+    {
+        $stmt = $this->db->prepare("
+            INSERT INTO users
+            (
+                first_name,
+                last_name,
+                email,
+                password_hash,
+                faculty_number,
+                role,
+                status
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        ");
+
+        $stmt->execute([
+            $data['first_name'] ?? "",
+            $data['last_name'] ?? "",
+            $data['email'] ?? "",
+            $data['password_hash'] ?? "",
+            $data['faculty_number'] ?? null,
+            $data['role'],
+            $data['status']
+        ]);
+
+        return (int)$this->db->lastInsertId();
+    }
+
+    public function findByEmail(string $email): ?array
+    {
+        $stmt = $this->db->prepare(
+            "SELECT * FROM users WHERE email = ?"
+        );
+
+        $stmt->execute([$email]);
+
+        return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+    }
+
+    public function getStudents(int $teacherId): array
+    {
+        $stmt = $this->db->prepare("
+            SELECT u.*
+            FROM users u
+            JOIN teacher_student ts
+                ON ts.student_id = u.id
+            WHERE ts.teacher_id = ?
+        ");
+
+        $stmt->execute([$teacherId]);
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+}
