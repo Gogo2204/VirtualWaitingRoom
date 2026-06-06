@@ -1,5 +1,7 @@
 <?php
 
+namespace App\Models;
+
 class RoomItem extends Model
 {
     protected string $table = 'room_items';

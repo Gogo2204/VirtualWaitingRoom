@@ -8,6 +8,7 @@ services:
     container_name: vwr_php
     volumes:
       - .:/var/www/html
+      - vendor_data:/var/www/html/vendor
     networks:
       - vwr_network
     depends_on:
@@ -43,6 +44,7 @@ services:
 
 volumes:
   mysql_data:
+  vendor_data:
 
 networks:
   vwr_network:
