@@ -1,5 +1,7 @@
 <?php
 
+namespace App\Models;
+
 class Subject extends Model
 {
     protected string $table = 'subjects';
