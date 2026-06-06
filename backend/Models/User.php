@@ -1,5 +1,7 @@
 <?php
 
+namespace App\Models;
+
 class User extends Model
 {
     protected string $table = 'users';
@@ -36,12 +38,12 @@ class User extends Model
     public function findByEmail(string $email): ?array
     {
         $stmt = $this->db->prepare(
-            "SELECT * FROM users WHERE email = ?"
+            "SELECT * FROM users WHERE email = ? LIMIT 1"
         );
 
         $stmt->execute([$email]);
 
-        return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+        return $stmt->fetch(\PDO::FETCH_ASSOC) ?: null;
     }
 
     public function getStudents(int $teacherId): array
@@ -56,6 +58,6 @@ class User extends Model
 
         $stmt->execute([$teacherId]);
 
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
 }
