@@ -1,0 +1,63 @@
+name: AI Code Review
+
+on:
+  pull_request:
+    types: [opened]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: "PR number to review"
+        required: true
+        type: number
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+
+    permissions:
+      pull-requests: write
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Get PR diff
+        run: |
+          git fetch origin ${{ github.base_ref }}
+          git diff origin/${{ github.base_ref }}...${{ github.sha }} \
+            -- \
+            ':!*.lock' \
+            ':!*-lock.json' \
+            ':!*.min.js' \
+            ':!*.min.css' \
+            ':!dist/*' \
+            ':!build/*' \
+            > pr.diff
+
+      - name: Check diff size
+        run: |
+          SIZE=$(wc -c < pr.diff)
+          echo "Diff size: $SIZE bytes"
+          if [ "$SIZE" -gt 200000 ]; then
+            echo "PR diff is too large for AI review (limit: 200KB)"
+            exit 1
+          fi
+
+      - name: Run AI Review
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number || inputs.pr_number }}
+        run: python .github/scripts/review.py
