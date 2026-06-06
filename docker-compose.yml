@@ -1,0 +1,51 @@
+version: "3.9"
+
+services:
+  php-fpm:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    container_name: vwr_php
+    volumes:
+      - .:/var/www/html
+    networks:
+      - vwr_network
+    depends_on:
+      - mysql
+
+  nginx:
+    image: nginx:stable-alpine
+    container_name: vwr_nginx
+    ports:
+      - "8080:80"
+    volumes:
+      - .:/var/www/html
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    networks:
+      - vwr_network
+    depends_on:
+      - php-fpm
+
+  mysql:
+    image: mysql:8.0
+    container_name: vwr_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./docker/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - vwr_network
+
+volumes:
+  mysql_data:
+
+networks:
+  vwr_network:
+    driver: bridge
