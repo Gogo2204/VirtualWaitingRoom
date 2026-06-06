@@ -1,5 +1,7 @@
 <?php
 
+namespace App\Models;
+
 class TeacherStudent extends Model
 {
     protected string $table = 'teacher_student';
