@@ -143,6 +143,83 @@ class RoomService
         $this->recalcEtas($roomId);
     }
 
+    public function inviteStudent(int $roomItemId, string $mode): array
+    {
+        if (!in_array($mode, ['temp', 'perm'], true)) {
+            throw new \InvalidArgumentException('Mode must be "temp" or "perm".');
+        }
+
+        $item = $this->roomItemModel->findById($roomItemId);
+        if (!$item) {
+            throw new \RuntimeException('Queue item not found.', 404);
+        }
+
+        if ($item['status'] !== 'waiting') {
+            throw new \RuntimeException('Student is not in waiting status.', 422);
+        }
+
+        $room   = $this->roomModel->findById((int)$item['room_id']);
+        $status = $mode === 'temp' ? 'invited_temp' : 'invited_perm';
+
+        $this->roomItemModel->updateStatus($roomItemId, $status);
+
+        return [
+            'item'         => $this->roomItemModel->findById($roomItemId),
+            'meeting_link' => $room['url'] ?? '',
+        ];
+    }
+
+    public function inviteAll(int $roomId): array
+    {
+        $room = $this->roomModel->findById($roomId);
+        if (!$room) {
+            throw new \RuntimeException('Room not found.', 404);
+        }
+
+        $waiting = array_filter(
+            $this->roomModel->getQueue($roomId),
+            fn($i) => $i['status'] === 'waiting'
+        );
+
+        foreach ($waiting as $item) {
+            $this->roomItemModel->updateStatus((int)$item['id'], 'invited_perm');
+        }
+
+        return [
+            'invited_count' => count($waiting),
+            'meeting_link'  => $room['url'] ?? '',
+        ];
+    }
+
+    public function studentReturns(int $roomItemId): void
+    {
+        $item = $this->roomItemModel->findById($roomItemId);
+        if (!$item) {
+            throw new \RuntimeException('Queue item not found.', 404);
+        }
+
+        if ($item['status'] !== 'invited_temp') {
+            throw new \RuntimeException('Student is not in invited_temp status.', 422);
+        }
+
+        $this->roomItemModel->updateStatus($roomItemId, 'waiting');
+        $this->recalcEtas((int)$item['room_id']);
+    }
+
+    public function setManualSlot(int $roomItemId, string $datetime): void
+    {
+        $item = $this->roomItemModel->findById($roomItemId);
+        if (!$item) {
+            throw new \RuntimeException('Queue item not found.', 404);
+        }
+
+        if (!strtotime($datetime)) {
+            throw new \InvalidArgumentException('Invalid datetime format.');
+        }
+
+        $this->roomItemModel->setEta($roomItemId, $datetime);
+    }
+
     public function recalcEtas(int $roomId): void
     {
         $room = $this->roomModel->findById($roomId);
