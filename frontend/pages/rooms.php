@@ -10,7 +10,11 @@
 <p><a href="/dashboard">← Dashboard</a></p>
 
 <div id="teacher-section" style="display:none">
-    <p><a href="/rooms/create">+ Create Room</a></p>
+    <p><a href="/rooms/create">+ Create Room</a> &nbsp; <a href="/stats">Statistics</a></p>
+</div>
+
+<div id="student-section" style="display:none">
+    <p><a href="/stats">Statistics</a></p>
 </div>
 
 <div id="rooms-list"></div>
@@ -23,6 +27,8 @@ const user = requireAuth('teacher', 'student', 'admin');
 (async () => {
     if (user.role === 'teacher' || user.role === 'admin') {
         document.getElementById('teacher-section').style.display = 'block';
+    } else if (user.role === 'student') {
+        document.getElementById('student-section').style.display = 'block';
     }
 
     try {
