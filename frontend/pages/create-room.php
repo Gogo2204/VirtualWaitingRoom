@@ -1,22 +1,42 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Create Room</title>
-</head>
-<body>
+<?php $pageTitle = 'Create Room'; require_once __DIR__ . '/../partials/head.php'; ?>
+<?php require_once __DIR__ . '/../partials/nav.php'; ?>
 
-<h2>Create Room</h2>
-<p><a href="/rooms">← Rooms</a></p>
+<div class="container-lg py-4" style="max-width:620px">
+    <div class="d-flex align-items-center gap-2 mb-4">
+        <a href="/rooms" class="text-muted text-decoration-none small">← Rooms</a>
+        <span class="text-muted">/</span>
+        <h4 class="fw-bold mb-0">Create Room</h4>
+    </div>
 
-<input type="text"   id="name"              placeholder="Room name" /><br>
-<select id="subject_id"><option value="">Loading subjects…</option></select><br>
-<textarea id="description" placeholder="Description (optional)" rows="3" cols="40"></textarea><br>
-<input type="number" id="wait_time_minutes" placeholder="Wait time per person (minutes)" value="15" min="1" /><br>
-<input type="text"   id="url"              placeholder="Meeting URL (optional)" /><br>
-<button onclick="createRoom()">Create</button>
-
-<p id="msg"></p>
+    <div class="card border-0 shadow-sm">
+        <div class="card-body">
+            <div class="mb-3">
+                <label for="name" class="form-label">Room name <span class="text-danger">*</span></label>
+                <input type="text" id="name" class="form-control" placeholder="e.g. Monday Office Hours">
+            </div>
+            <div class="mb-3">
+                <label for="subject_id" class="form-label">Purpose <span class="text-danger">*</span></label>
+                <select id="subject_id" class="form-select">
+                    <option value="">Loading purposes…</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="description" class="form-label">Description <span class="text-muted small">(optional)</span></label>
+                <textarea id="description" class="form-control" rows="2" placeholder="Short description visible to students"></textarea>
+            </div>
+            <div class="mb-3">
+                <label for="wait_time_minutes" class="form-label">Wait time per student (minutes)</label>
+                <input type="number" id="wait_time_minutes" class="form-control" value="15" min="1" max="120">
+            </div>
+            <div class="mb-4">
+                <label for="url" class="form-label">Meeting URL <span class="text-muted small">(optional)</span></label>
+                <input type="url" id="url" class="form-control" placeholder="https://meet.example.com/…">
+            </div>
+            <button onclick="createRoom()" class="btn btn-primary">Create Room</button>
+            <div id="msg" class="small mt-2"></div>
+        </div>
+    </div>
+</div>
 
 <?php require_once __DIR__ . '/../partials/app.js.php'; ?>
 <script>
@@ -26,7 +46,7 @@ requireAuth('teacher');
     try {
         const data   = await api('GET', '/api/subjects');
         const select = document.getElementById('subject_id');
-        select.innerHTML = '';
+        select.innerHTML = '<option value="">Select a purpose…</option>';
         data.subjects.forEach(s => {
             const opt      = document.createElement('option');
             opt.value       = s.id;
@@ -34,7 +54,7 @@ requireAuth('teacher');
             select.appendChild(opt);
         });
     } catch (err) {
-        setMsg('msg', 'Could not load subjects: ' + err.message);
+        setMsg('msg', 'Could not load purposes: ' + err.message);
     }
 })();
 
@@ -46,7 +66,6 @@ async function createRoom() {
         wait_time_minutes: parseInt(document.getElementById('wait_time_minutes').value) || 15,
         url:               document.getElementById('url').value.trim(),
     };
-
     try {
         const data = await api('POST', '/api/rooms', payload);
         window.location.href = `/rooms/${data.room.id}`;
@@ -56,5 +75,4 @@ async function createRoom() {
 }
 </script>
 
-</body>
-</html>
+<?php require_once __DIR__ . '/../partials/foot.php'; ?>
