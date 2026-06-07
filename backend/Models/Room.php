@@ -45,6 +45,30 @@ class Room extends Model
 
         $stmt->execute([$roomId]);
 
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    public function findByTeacher(int $teacherId): array
+    {
+        $stmt = $this->db->prepare("
+            SELECT r.*, s.type AS subject_type
+            FROM rooms r
+            JOIN subjects s ON s.id = r.subject_id
+            WHERE r.teacher_id = ?
+            ORDER BY r.created_at DESC
+        ");
+
+        $stmt->execute([$teacherId]);
+
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    public function updateStatus(int $id, string $status): bool
+    {
+        $stmt = $this->db->prepare("
+            UPDATE rooms SET status = ? WHERE id = ?
+        ");
+
+        return $stmt->execute([$status, $id]);
     }
 }
