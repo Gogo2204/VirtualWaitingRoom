@@ -110,6 +110,22 @@ class RoomItem extends Model
         $stmt->execute([$datetime, $id]);
     }
 
+    public function getStatusCounts(int $roomId): array
+    {
+        $stmt = $this->db->prepare("
+            SELECT status, COUNT(*) AS cnt
+            FROM room_items
+            WHERE room_id = ?
+            GROUP BY status
+        ");
+        $stmt->execute([$roomId]);
+        $counts = [];
+        foreach ($stmt->fetchAll(\PDO::FETCH_ASSOC) as $row) {
+            $counts[$row['status']] = (int)$row['cnt'];
+        }
+        return $counts;
+    }
+
     public function recalcEtas(int $roomId, int $waitTimeMinutes): void
     {
         $stmt = $this->db->prepare("
