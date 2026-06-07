@@ -103,6 +103,8 @@ function renderQueue(queue) {
             const myOwn = String(item.student_id) === String(user.id);
             if (myOwn) {
                 parts.push(`<br><input type="text" id="cmt-${item.id}" placeholder="Add comment…" size="30"><select id="vis-${item.id}"><option value="public">Public</option><option value="teacher_only">Private</option></select><button onclick="addComment(${item.id})">Add</button>`);
+            } else {
+                parts.push(`<br><input type="text" id="cmt-${item.id}" placeholder="Add public comment…" size="30"><button onclick="addComment(${item.id})">Add</button>`);
             }
         }
 
