@@ -83,9 +83,18 @@ class RoomService
             }
 
             $item['comments'] = $comments;
+        }
+        unset($item);
 
+        $doneIds = array_map('intval', array_column(
+            array_filter($items, fn($i) => $i['status'] === 'done'),
+            'id'
+        ));
+        $times = $this->roomHistoryModel->getTimesForItems($doneIds);
+
+        foreach ($items as &$item) {
             if ($item['status'] === 'done') {
-                $item['times'] = $this->roomHistoryModel->getTimes((int)$item['id']);
+                $item['times'] = $times[(int)$item['id']] ?? ['queue_seconds' => 0, 'meeting_seconds' => 0];
             }
         }
         unset($item);

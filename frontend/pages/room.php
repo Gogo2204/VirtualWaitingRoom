@@ -63,7 +63,7 @@ function renderQueue(queue) {
     }
 
     queue.forEach(item => {
-        if (parseInt(item.student_id) === parseInt(user.id)) myItem = item;
+        if (String(item.student_id) === String(user.id)) myItem = item;
 
         const div   = document.createElement('div');
         let   parts = [`#${item.position} — ${item.first_name} ${item.last_name} [${item.status}]`];
@@ -103,7 +103,7 @@ function updateStudentControls(item) {
 
     const inQueue  = item && item.status !== 'done';
     const canLeave = item && item.status === 'waiting';
-    const inMeet   = item && (item.status === 'invited_perm');
+    const inMeet   = item && (item.status === 'invited_perm') && item.meeting_link;
 
     document.getElementById('join-btn').style.display  = item ? 'none' : 'inline';
     document.getElementById('leave-btn').style.display = canLeave ? 'inline' : 'none';
