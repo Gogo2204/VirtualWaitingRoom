@@ -69,7 +69,7 @@ function renderQueue(queue) {
                 parts.push(`<button onclick="invite(${item.id},'temp')">Temp invite</button>`);
                 parts.push(`<button onclick="invite(${item.id},'perm')">Perm invite</button>`);
                 parts.push(`<input type="datetime-local" id="slot-${item.id}">`);
-                parts.push(`<button onclick="setSlot(${item.id})">Set slot</button>`);
+                parts.push(`<button onclick="if(document.getElementById('slot-${item.id}').value) setSlot(${item.id})">Set slot</button>`);
             }
             if (item.status === 'invited_temp') {
                 parts.push(`<button onclick="studentReturn(${item.id})">Mark returned</button>`);
