@@ -28,7 +28,10 @@ class UserController
             http_response_code(422);
             echo json_encode(['success' => false, 'message' => $e->getMessage()]);
         } catch (\RuntimeException $e) {
-            http_response_code((int)($e->getCode() ?: 500));
+            error_log('RuntimeException: code=' . $e->getCode() . ' msg=' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
+            $code = (int)$e->getCode();
+            $code = ($code >= 400 && $code < 600) ? $code : 500;
+            http_response_code($code);
             echo json_encode(['success' => false, 'message' => $e->getMessage()]);
         }
     }

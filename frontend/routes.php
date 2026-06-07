@@ -12,6 +12,10 @@ match (true) {
         require_once __DIR__ . '/pages/login.php';
     })(),
 
+    $method === 'GET' && $path === '/register' => (function () {
+        require_once __DIR__ . '/pages/register.php';
+    })(),
+
     $method === 'GET' && $path === '/dashboard' => (function () {
         require_once __DIR__ . '/pages/dashboard.php';
     })(),
