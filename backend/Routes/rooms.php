@@ -8,6 +8,7 @@ use App\Models\RoomItem;
 use App\Models\Comment;
 use App\Models\Subject;
 use App\Models\TeacherStudent;
+use App\Models\RoomHistory;
 
 function makeRoomController(): RoomController
 {
@@ -17,14 +18,15 @@ function makeRoomController(): RoomController
         new RoomItem($db),
         new Comment($db),
         new Subject($db),
-        new TeacherStudent($db)
+        new TeacherStudent($db),
+        new RoomHistory($db)
     ));
 }
 
 $segments  = explode('/', ltrim($path, '/'));
 $roomId    = isset($segments[2]) && is_numeric($segments[2]) ? (int)$segments[2] : null;
 $segment3  = $segments[3] ?? null;
-$itemId    = isset($segments[4]) && is_numeric($segments[4]) ? (int)$segments[4] : null;
+$itemId    = isset($segments[4]) && is_numeric($segments[4]) && (int)$segments[4] > 0 ? (int)$segments[4] : null;
 $segment5  = $segments[5] ?? null;
 
 match (true) {
@@ -69,19 +71,19 @@ match (true) {
         makeRoomController()->inviteStudent($roomId, $itemId);
     })(),
 
+    $method === 'POST' && $roomId !== null && $segment3 === 'queue' && $itemId !== null && $segment5 === 'finish' => (function () use ($roomId, $itemId) {
+        AuthMiddleware::require('teacher');
+        makeRoomController()->finishMeeting($itemId);
+    })(),
+
     $method === 'POST' && $roomId !== null && $segment3 === 'queue' && $itemId !== null && $segment5 === 'return' => (function () use ($roomId, $itemId) {
-        AuthMiddleware::require('student');
+        AuthMiddleware::require('student', 'teacher');
         makeRoomController()->studentReturns($roomId, $itemId);
     })(),
 
     $method === 'POST' && $roomId !== null && $segment3 === 'queue' && $itemId !== null && $segment5 === 'slot' => (function () use ($roomId, $itemId) {
         AuthMiddleware::require('teacher');
         makeRoomController()->setManualSlot($roomId, $itemId);
-    })(),
-
-    $method === 'POST' && $roomId !== null && $segment3 === 'invite-all' => (function () use ($roomId) {
-        AuthMiddleware::require('teacher');
-        makeRoomController()->inviteAll($roomId);
     })(),
 
     default => (function () {

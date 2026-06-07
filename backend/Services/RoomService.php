@@ -7,6 +7,7 @@ use App\Models\RoomItem;
 use App\Models\Comment;
 use App\Models\Subject;
 use App\Models\TeacherStudent;
+use App\Models\RoomHistory;
 
 class RoomService
 {
@@ -15,7 +16,8 @@ class RoomService
         private RoomItem $roomItemModel,
         private Comment $commentModel,
         private Subject $subjectModel,
-        private TeacherStudent $teacherStudentModel
+        private TeacherStudent $teacherStudentModel,
+        private RoomHistory $roomHistoryModel
     ) {}
 
     public function createRoom(int $teacherId, array $data): array
@@ -84,6 +86,19 @@ class RoomService
         }
         unset($item);
 
+        $doneIds = array_map('intval', array_column(
+            array_filter($items, fn($i) => $i['status'] === 'done'),
+            'id'
+        ));
+        $times = $this->roomHistoryModel->getTimesForItems($doneIds);
+
+        foreach ($items as &$item) {
+            if ($item['status'] === 'done') {
+                $item['times'] = $times[(int)$item['id']] ?? ['queue_seconds' => 0, 'meeting_seconds' => 0];
+            }
+        }
+        unset($item);
+
         return $items;
     }
 
@@ -106,6 +121,7 @@ class RoomService
         $position = count($queue) + 1;
 
         $itemId = $this->roomItemModel->joinQueue($roomId, $studentId, $position);
+        $this->roomHistoryModel->record($itemId, $studentId, $roomId, 'joined');
         $this->recalcEtas($roomId);
 
         $item = $this->roomItemModel->findById($itemId);
@@ -174,31 +190,43 @@ class RoomService
 
         $this->roomItemModel->updateStatus($roomItemId, $status);
 
+        if ($mode === 'perm') {
+            $this->roomHistoryModel->record(
+                $roomItemId,
+                (int)$item['student_id'],
+                (int)$item['room_id'],
+                'invited'
+            );
+        }
+
         return [
             'item'         => $this->roomItemModel->findById($roomItemId),
             'meeting_link' => $room['url'] ?? '',
         ];
     }
 
-    public function inviteAll(int $roomId): array
+    public function finishMeeting(int $roomItemId): array
     {
-        $room = $this->roomModel->findById($roomId);
-        if (!$room) {
-            throw new \RuntimeException('Room not found.', 404);
+        $item = $this->roomItemModel->findById($roomItemId);
+        if (!$item) {
+            throw new \RuntimeException('Queue item not found.', 404);
         }
 
-        $waiting = array_values(array_filter(
-            $this->roomModel->getQueue($roomId),
-            fn($i) => $i['status'] === 'waiting'
-        ));
-
-        foreach ($waiting as $item) {
-            $this->roomItemModel->updateStatus((int)$item['id'], 'invited_perm');
+        if ($item['status'] !== 'invited_perm') {
+            throw new \RuntimeException('Student is not in a permanent meeting.', 422);
         }
+
+        $this->roomItemModel->updateStatus($roomItemId, 'done');
+        $this->roomHistoryModel->record(
+            $roomItemId,
+            (int)$item['student_id'],
+            (int)$item['room_id'],
+            'done'
+        );
 
         return [
-            'invited_count' => count($waiting),
-            'meeting_link'  => $room['url'] ?? '',
+            'item'  => $this->roomItemModel->findById($roomItemId),
+            'times' => $this->roomHistoryModel->getTimes($roomItemId),
         ];
     }
 
