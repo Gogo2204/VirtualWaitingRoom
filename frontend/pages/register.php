@@ -24,7 +24,7 @@ async function register() {
         first_name:     document.getElementById('first_name').value.trim(),
         last_name:      document.getElementById('last_name').value.trim(),
         email:          document.getElementById('email').value.trim(),
-        password:       document.getElementById('password').value,
+        password:       document.getElementById('password').value.trim(),
         faculty_number: document.getElementById('faculty_number').value.trim(),
     };
 
