@@ -19,11 +19,13 @@
     <p id="msg"></p>
 </div>
 
-<br><button onclick="logout()">Logout</button>
+<br><a href="/change-password">Change password</a>
+<br><br><button onclick="logout()">Logout</button>
 
 <script>
     const token = localStorage.getItem('token');
     const user  = JSON.parse(localStorage.getItem('user') || 'null');
+    console.log(user)
 
     if (!token) {
         window.location.href = '/login';

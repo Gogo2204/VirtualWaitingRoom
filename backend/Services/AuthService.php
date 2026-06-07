@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Middleware\AuthMiddleware;
+
 use App\Models\User;
 use App\Helpers\JwtHelper;
 
@@ -70,9 +72,50 @@ class AuthService
             'email'         => $email,
             'password_hash' => password_hash($password, PASSWORD_BCRYPT),
             'status'        => 'registered',
+            'updated_at'    => date('Y-m-d H:i:s')
         ]);
 
         $user = $this->userModel->findById($existing['id']);
+        unset($user['password_hash']);
+
+        $token = JwtHelper::encode([
+            'sub'  => $user['id'],
+            'role' => $user['role'],
+        ]);
+
+        return ['token' => $token, 'user' => $user];
+    }
+
+    public function changePassword(
+        string $oldPassword,
+        string $newPassword
+    ): array {
+
+        if (empty($oldPassword) || empty($newPassword)) {
+            throw new \InvalidArgumentException('All fields are required.');
+        }
+
+        if (strlen($newPassword) < 8) {
+            throw new \InvalidArgumentException('Password must be at least 8 characters.');
+        }
+        
+        $user =  $this->userModel->findById(AuthMiddleware::user()['sub'] ?? null);
+        error_log('USER FOUND: ' . json_encode($user));
+
+        if (!$user || !password_verify($oldPassword, $user['password_hash'])) {
+            throw new \RuntimeException('Old password is not correct.', 401);
+        }
+
+        if ($user['status'] !== 'registered') {
+            throw new \RuntimeException('This account is not active.', 409);
+        }
+
+        $this->userModel->update($user['id'], [
+            'password_hash' => password_hash($newPassword, PASSWORD_BCRYPT),
+            'updated_at'    => date('Y-m-d H:i:s')
+        ]);
+
+        $user = $this->userModel->findById($user['id']);
         unset($user['password_hash']);
 
         $token = JwtHelper::encode([
