@@ -31,6 +31,7 @@
     <p id="import-msg"></p>
 </div>
 
+<br><a href="/rooms">My Rooms</a>
 <br><a href="/change-password">Change password</a>
 <br><br><button onclick="logout()">Logout</button>
 
