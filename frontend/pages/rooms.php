@@ -64,16 +64,16 @@ function renderRooms() {
 
     grid.innerHTML = rooms.map(r => `
         <div class="col">
-            <div class="room-card">
+            <a href="/rooms/${r.id}" class="room-card d-block text-decoration-none">
                 <div class="d-flex justify-content-between align-items-start gap-2">
                     <div class="overflow-hidden">
-                        <h6 class="mb-1 text-truncate"><a href="/rooms/${r.id}">${r.name}</a></h6>
+                        <h6 class="mb-1 text-truncate">${r.name}</h6>
                         <small class="text-muted">${r.subject_type}</small>
                         ${r.description ? `<p class="small text-muted mt-1 mb-0 text-truncate" title="${r.description}">${r.description}</p>` : ''}
                     </div>
                     <span class="sb sb-${r.status} flex-shrink-0">${STATUS_LABEL[r.status] ?? r.status}</span>
                 </div>
-            </div>
+            </a>
         </div>
     `).join('');
 }
