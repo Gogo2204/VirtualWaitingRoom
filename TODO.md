@@ -86,7 +86,7 @@
 - [x] `POST /api/users/teacher` — admin creates teacher
 
 ### Users (missing)
-- [ ] `POST /api/users/import-csv` — teacher uploads CSV; validates, creates students, links them
+- [x] `POST /api/users/import-csv` — teacher uploads CSV; validates, creates students, links them
 - [ ] `GET  /api/users/students` — teacher lists their students
 - [x] `PUT  /api/users/password` — any user changes own password (for teachers after first login)
 
