@@ -19,7 +19,8 @@
     <p id="msg"></p>
 </div>
 
-<br><button onclick="logout()">Logout</button>
+<br><a href="/change-password">Change password</a>
+<br><br><button onclick="logout()">Logout</button>
 
 <script>
     const token = localStorage.getItem('token');
