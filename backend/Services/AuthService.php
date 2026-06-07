@@ -99,11 +99,14 @@ class AuthService
             throw new \InvalidArgumentException('Password must be at least 8 characters.');
         }
         
-        $user =  $this->userModel->findById(AuthMiddleware::user()['sub'] ?? null);
-        error_log('USER FOUND: ' . json_encode($user));
+        $userId = AuthMiddleware::user()['sub'] ?? null;
+        if (!$userId) {
+            throw new \RuntimeException('User not authenticated.', 401);
+        }
+        $user = $this->userModel->findById($userId);
 
         if (!$user || !password_verify($oldPassword, $user['password_hash'])) {
-            throw new \RuntimeException('Old password is not correct.', 401);
+            throw new \RuntimeException('Invalid credentials.', 401);
         }
 
         if ($user['status'] !== 'registered') {

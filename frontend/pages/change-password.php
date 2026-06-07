@@ -46,20 +46,12 @@
                 document.getElementById('msg').textContent = data.message ?? 'Failed.';
                 return;
             }
-            console.log(localStorage.getItem('token'))
-            console.log(localStorage.getItem('user'))
 
-            try {
-                localStorage.setItem('token', data.token);
-                localStorage.setItem('user', JSON.stringify(data.user));
-                console.log('After set:', localStorage.getItem('token'));
-                console.log('After set:', localStorage.getItem('user'));
-            } catch (e) {
-                console.error('localStorage failed:', e);
-            }
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('user', JSON.stringify(data.user));
 
             document.getElementById('msg').textContent = 'Password changed successfully.';
-            //setTimeout(() => window.location.href = '/dashboard', 1500);
+            setTimeout(() => window.location.href = '/dashboard', 1500);
 
         } catch (err) {
             console.error(err);
