@@ -19,6 +19,8 @@ if (str_starts_with($path, '/api/auth')) {
     require_once __DIR__ . '/rooms.php';
 } elseif (str_starts_with($path, '/api/subjects')) {
     require_once __DIR__ . '/subjects.php';
+} elseif (str_starts_with($path, '/api/stats')) {
+    require_once __DIR__ . '/stats.php';
 } else {
     http_response_code(404);
     echo json_encode(['success' => false, 'message' => 'Route not found.']);

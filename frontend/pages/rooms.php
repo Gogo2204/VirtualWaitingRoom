@@ -10,7 +10,7 @@
 <p><a href="/dashboard">← Dashboard</a></p>
 
 <div id="teacher-section" style="display:none">
-    <p><a href="/rooms/create">+ Create Room</a></p>
+    <p><a href="/rooms/create">+ Create Room</a> &nbsp; <a href="/stats">Statistics</a></p>
 </div>
 
 <div id="rooms-list"></div>
