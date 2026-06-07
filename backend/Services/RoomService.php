@@ -1,0 +1,155 @@
+<?php
+
+namespace App\Services;
+
+use App\Models\Room;
+use App\Models\RoomItem;
+use App\Models\Comment;
+use App\Models\Subject;
+use App\Models\TeacherStudent;
+
+class RoomService
+{
+    public function __construct(
+        private Room $roomModel,
+        private RoomItem $roomItemModel,
+        private Comment $commentModel,
+        private Subject $subjectModel,
+        private TeacherStudent $teacherStudentModel
+    ) {}
+
+    public function createRoom(int $teacherId, array $data): array
+    {
+        $name      = trim($data['name'] ?? '');
+        $subjectId = (int)($data['subject_id'] ?? 0);
+
+        if ($name === '') {
+            throw new \InvalidArgumentException('Room name is required.');
+        }
+
+        if ($subjectId <= 0 || !$this->subjectModel->findById($subjectId)) {
+            throw new \InvalidArgumentException('Invalid subject_id.');
+        }
+
+        $id = $this->roomModel->create([
+            'teacher_id'        => $teacherId,
+            'subject_id'        => $subjectId,
+            'name'              => $name,
+            'description'       => trim($data['description'] ?? ''),
+            'wait_time_minutes' => max(1, (int)($data['wait_time_minutes'] ?? 15)),
+            'url'               => trim($data['url'] ?? ''),
+        ]);
+
+        return $this->roomModel->findById($id);
+    }
+
+    public function listRooms(int $teacherId): array
+    {
+        return $this->roomModel->findByTeacher($teacherId);
+    }
+
+    public function listRoomsForStudent(int $studentId): array
+    {
+        $teacherIds = $this->teacherStudentModel->getTeacherIds($studentId);
+
+        if (empty($teacherIds)) {
+            return [];
+        }
+
+        $rooms = [];
+        foreach ($teacherIds as $teacherId) {
+            foreach ($this->roomModel->findByTeacher($teacherId) as $room) {
+                if ($room['status'] === 'open') {
+                    $rooms[] = $room;
+                }
+            }
+        }
+
+        return $rooms;
+    }
+
+    public function getQueue(int $roomId, int $requesterId): array
+    {
+        $room = $this->roomModel->findById($roomId);
+        if (!$room) {
+            throw new \RuntimeException('Room not found.', 404);
+        }
+
+        $isTeacher = ((int)$room['teacher_id'] === $requesterId);
+
+        $items = $this->roomModel->getQueue($roomId);
+
+        foreach ($items as &$item) {
+            $comments = $this->commentModel->getForRoomItem((int)$item['id']);
+
+            if (!$isTeacher) {
+                $comments = array_values(array_filter(
+                    $comments,
+                    fn($c) => $c['visibility'] === 'public'
+                ));
+            }
+
+            $item['comments'] = $comments;
+        }
+        unset($item);
+
+        return $items;
+    }
+
+    public function joinQueue(int $roomId, int $studentId): array
+    {
+        $room = $this->roomModel->findById($roomId);
+        if (!$room) {
+            throw new \RuntimeException('Room not found.', 404);
+        }
+
+        if ($room['status'] !== 'open') {
+            throw new \RuntimeException('Room is not open.', 422);
+        }
+
+        if ($this->roomItemModel->getByStudentAndRoom($studentId, $roomId)) {
+            throw new \RuntimeException('Already in queue.', 422);
+        }
+
+        $queue    = $this->roomModel->getQueue($roomId);
+        $position = count($queue) + 1;
+
+        $itemId = $this->roomItemModel->joinQueue($roomId, $studentId, $position);
+        $this->recalcEtas($roomId);
+
+        return $this->roomItemModel->findById($itemId);
+    }
+
+    public function leaveQueue(int $roomItemId, int $studentId): void
+    {
+        $item = $this->roomItemModel->findById($roomItemId);
+        if (!$item) {
+            throw new \RuntimeException('Queue item not found.', 404);
+        }
+
+        if ((int)$item['student_id'] !== $studentId) {
+            throw new \RuntimeException('Forbidden.', 403);
+        }
+
+        if ($item['status'] !== 'waiting') {
+            throw new \RuntimeException('Cannot leave queue in current status.', 422);
+        }
+
+        $roomId   = (int)$item['room_id'];
+        $position = (int)$item['position'];
+
+        $this->roomItemModel->delete($roomItemId);
+        $this->roomItemModel->reorderAfterRemoval($roomId, $position);
+        $this->recalcEtas($roomId);
+    }
+
+    public function recalcEtas(int $roomId): void
+    {
+        $room = $this->roomModel->findById($roomId);
+        if (!$room) {
+            return;
+        }
+
+        $this->roomItemModel->recalcEtas($roomId, (int)$room['wait_time_minutes']);
+    }
+}
