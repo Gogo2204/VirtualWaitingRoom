@@ -14,6 +14,8 @@
 
 <p id="msg"></p>
 
+<p>Student? <a href="/register">Register here</a></p>
+
 <script>
 async function login() {
     const email    = document.getElementById('email').value;

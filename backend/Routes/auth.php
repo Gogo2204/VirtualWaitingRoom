@@ -10,6 +10,11 @@ match (true) {
         $authController->login();
     })(),
 
+    $method === 'POST' && $path === '/api/auth/register' => (function () {
+        $authController = new AuthController(new AuthService(new User(getDb())));
+        $authController->register();
+    })(),
+
     default => (function () {
         http_response_code(404);
         echo json_encode(['success' => false, 'message' => 'Auth route not found.']);
