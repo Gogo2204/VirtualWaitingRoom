@@ -15,11 +15,7 @@
 - [x] `room_items` — position, status (`waiting` / `invited_temp` / `invited_perm` / `in_session` / `done`), eta
 - [x] `comments` — visibility (`teacher_only` / `public`), content
 - [x] Unique constraint on `faculty_number`
-- [ ] **Migration 005** — add `meeting_type` ENUM(`bbb`, `zoom`, `meet`, `jitsi`, `custom`) to `rooms`
-- [ ] **Migration 006** — add `access_code` VARCHAR(100) NULL to `rooms`
-- [ ] **Migration 007** — add `actual_start` TIMESTAMP NULL and `actual_end` TIMESTAMP NULL to `room_items` (needed for real wait-time statistics)
-- [ ] **Migration 008** — add `description` TEXT NULL to `subjects` (for admin to explain the purpose)
-- [ ] **Seed migrations** — seed default subjects (e.g. "Защита на проект", "Консултация", "Нанасяне на оценка", "Изпит")
+- [x] **Migration 005** — seed default subjects ("Защита на проект", "Консултация", "Нанасяне на оценка", "Изпит")
 
 ---
 
@@ -31,14 +27,14 @@
 - [x] `Comment` — create, getForRoomItem
 - [x] `Subject` — create
 - [x] `TeacherStudent` — assign
-- [ ] `Room::findById(int $id): ?array`
-- [ ] `Room::findByTeacher(int $teacherId): array`
-- [ ] `Room::updateStatus(int $id, string $status): bool`
-- [ ] `RoomItem::findById(int $id): ?array`
-- [ ] `RoomItem::getNextWaiting(int $roomId): ?array` — lowest position with status `waiting`
-- [ ] `RoomItem::reorderAfterRemoval(int $roomId, int $removedPosition): void`
-- [ ] `RoomItem::setEta(int $roomId): void` — recalculate ETA for all `waiting` entries based on `wait_time_minutes`
-- [ ] `RoomItem::getByStudentAndRoom(int $studentId, int $roomId): ?array`
+- [x] `Room::findById(int $id): ?array` — inherited from Model
+- [x] `Room::findByTeacher(int $teacherId): array`
+- [x] `Room::updateStatus(int $id, string $status): bool`
+- [x] `RoomItem::findById(int $id): ?array` — inherited from Model
+- [x] `RoomItem::getNextWaiting(int $roomId): ?array`
+- [x] `RoomItem::reorderAfterRemoval(int $roomId, int $removedPosition): void`
+- [x] `RoomItem::recalcEtas(int $roomId, int $waitTimeMinutes): void`
+- [x] `RoomItem::getByStudentAndRoom(int $studentId, int $roomId): ?array`
 - [ ] `Subject::getAll(): array`
 - [ ] `Subject::findById(int $id): ?array`
 - [ ] `TeacherStudent::importBatch(int $teacherId, array $studentIds): void` — bulk insert, skip duplicates

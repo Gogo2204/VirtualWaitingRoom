@@ -58,6 +58,70 @@ class RoomItem extends Model
 
         $stmt->execute([$roomId]);
 
-        return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+        return $stmt->fetch(\PDO::FETCH_ASSOC) ?: null;
+    }
+
+    public function getByStudentAndRoom(int $studentId, int $roomId): ?array
+    {
+        $stmt = $this->db->prepare("
+            SELECT *
+            FROM room_items
+            WHERE student_id = ? AND room_id = ?
+            LIMIT 1
+        ");
+
+        $stmt->execute([$studentId, $roomId]);
+
+        return $stmt->fetch(\PDO::FETCH_ASSOC) ?: null;
+    }
+
+    public function getNextWaiting(int $roomId): ?array
+    {
+        $stmt = $this->db->prepare("
+            SELECT *
+            FROM room_items
+            WHERE room_id = ? AND status = 'waiting'
+            ORDER BY position ASC
+            LIMIT 1
+        ");
+
+        $stmt->execute([$roomId]);
+
+        return $stmt->fetch(\PDO::FETCH_ASSOC) ?: null;
+    }
+
+    public function reorderAfterRemoval(int $roomId, int $removedPosition): void
+    {
+        $stmt = $this->db->prepare("
+            UPDATE room_items
+            SET position = position - 1
+            WHERE room_id = ? AND position > ? AND status = 'waiting'
+        ");
+
+        $stmt->execute([$roomId, $removedPosition]);
+    }
+
+    public function recalcEtas(int $roomId, int $waitTimeMinutes): void
+    {
+        $stmt = $this->db->prepare("
+            SELECT id, position
+            FROM room_items
+            WHERE room_id = ? AND status = 'waiting'
+            ORDER BY position ASC
+        ");
+
+        $stmt->execute([$roomId]);
+        $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        $update = $this->db->prepare("
+            UPDATE room_items
+            SET eta = DATE_ADD(NOW(), INTERVAL ? MINUTE)
+            WHERE id = ?
+        ");
+
+        foreach ($rows as $i => $row) {
+            $minutesFromNow = ($i + 1) * $waitTimeMinutes;
+            $update->execute([$minutesFromNow, $row['id']]);
+        }
     }
 }
