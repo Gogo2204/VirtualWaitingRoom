@@ -159,10 +159,10 @@ class RoomController
         }
     }
 
-    public function inviteAll(int $roomId): void
+    public function finishMeeting(int $roomId, int $itemId): void
     {
         try {
-            $result = $this->roomService->inviteAll($roomId);
+            $result = $this->roomService->finishMeeting($itemId);
             echo json_encode(['success' => true] + $result);
         } catch (\RuntimeException $e) {
             $code = $e->getCode() ?: 500;

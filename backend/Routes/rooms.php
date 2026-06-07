@@ -8,6 +8,7 @@ use App\Models\RoomItem;
 use App\Models\Comment;
 use App\Models\Subject;
 use App\Models\TeacherStudent;
+use App\Models\RoomHistory;
 
 function makeRoomController(): RoomController
 {
@@ -17,7 +18,8 @@ function makeRoomController(): RoomController
         new RoomItem($db),
         new Comment($db),
         new Subject($db),
-        new TeacherStudent($db)
+        new TeacherStudent($db),
+        new RoomHistory($db)
     ));
 }
 
@@ -69,6 +71,11 @@ match (true) {
         makeRoomController()->inviteStudent($roomId, $itemId);
     })(),
 
+    $method === 'POST' && $roomId !== null && $segment3 === 'queue' && $itemId !== null && $segment5 === 'finish' => (function () use ($roomId, $itemId) {
+        AuthMiddleware::require('teacher');
+        makeRoomController()->finishMeeting($roomId, $itemId);
+    })(),
+
     $method === 'POST' && $roomId !== null && $segment3 === 'queue' && $itemId !== null && $segment5 === 'return' => (function () use ($roomId, $itemId) {
         AuthMiddleware::require('student', 'teacher');
         makeRoomController()->studentReturns($roomId, $itemId);
@@ -77,11 +84,6 @@ match (true) {
     $method === 'POST' && $roomId !== null && $segment3 === 'queue' && $itemId !== null && $segment5 === 'slot' => (function () use ($roomId, $itemId) {
         AuthMiddleware::require('teacher');
         makeRoomController()->setManualSlot($roomId, $itemId);
-    })(),
-
-    $method === 'POST' && $roomId !== null && $segment3 === 'invite-all' => (function () use ($roomId) {
-        AuthMiddleware::require('teacher');
-        makeRoomController()->inviteAll($roomId);
     })(),
 
     default => (function () {
