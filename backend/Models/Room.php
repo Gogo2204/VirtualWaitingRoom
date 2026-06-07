@@ -63,6 +63,28 @@ class Room extends Model
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
 
+    public function findByTeachersWithStatus(array $teacherIds, string $status): array
+    {
+        if (empty($teacherIds)) {
+            return [];
+        }
+
+        $placeholders = implode(',', array_fill(0, count($teacherIds), '?'));
+
+        $stmt = $this->db->prepare("
+            SELECT r.*, s.type AS subject_type
+            FROM rooms r
+            JOIN subjects s ON s.id = r.subject_id
+            WHERE r.teacher_id IN ({$placeholders})
+            AND r.status = ?
+            ORDER BY r.created_at DESC
+        ");
+
+        $stmt->execute([...$teacherIds, $status]);
+
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
     public function updateStatus(int $id, string $status): bool
     {
         $stmt = $this->db->prepare("
