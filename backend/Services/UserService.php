@@ -64,7 +64,7 @@ class UserService
             $studentId = $this->userModel->create([
                 'first_name'     => '',
                 'last_name'      => '',
-                'email'          => null,
+                'email'          => "student_{$fn}@placeholder.local",
                 'password_hash'  => '',
                 'faculty_number' => $fn,
                 'role'           => 'student',
@@ -74,8 +74,7 @@ class UserService
             if ($this->teacherStudentModel) {
                 $this->teacherStudentModel->assign($teacherId, $studentId);
             }
-    
-            $this->teacherStudentModel->assign($teacherId, $studentId);
+
             $created++;
         }
     

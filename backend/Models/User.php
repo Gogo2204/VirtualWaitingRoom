@@ -84,7 +84,7 @@ class User extends Model
 
     public function update(int $id, array $data): void
     {
-        unset($data['created_at']);
+        unset($data['created_at'], $data['id']);
         $data['updated_at'] = date('Y-m-d H:i:s');
 
         $fields = implode(', ', array_map(fn($k) => "$k = ?", array_keys($data)));
