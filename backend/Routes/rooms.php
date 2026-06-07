@@ -70,7 +70,7 @@ match (true) {
     })(),
 
     $method === 'POST' && $roomId !== null && $segment3 === 'queue' && $itemId !== null && $segment5 === 'return' => (function () use ($roomId, $itemId) {
-        AuthMiddleware::require('student');
+        AuthMiddleware::require('student', 'teacher');
         makeRoomController()->studentReturns($roomId, $itemId);
     })(),
 
