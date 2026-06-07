@@ -29,7 +29,7 @@ class CommentService
         }
 
         if ($requesterRole === 'student' && (int)$item['student_id'] !== $userId) {
-            throw new \RuntimeException('Students can only comment on their own queue entry.', 403);
+            $visibility = 'public';
         }
 
         $id = $this->commentModel->create([
