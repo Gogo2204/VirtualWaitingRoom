@@ -37,6 +37,10 @@ match (true) {
         require_once __DIR__ . '/pages/room.php';
     })(),
 
+    $method === 'GET' && $path === '/stats' => (function () {
+        require_once __DIR__ . '/pages/stats.php';
+    })(),
+
     default => (function () {
         http_response_code(404);
         require_once __DIR__ . '/pages/404.php';

@@ -76,6 +76,13 @@ function renderQueue(queue) {
             parts.push(`| Queue: ${fmtSeconds(item.times.queue_seconds)} | Meeting: ${fmtSeconds(item.times.meeting_seconds)}`);
         }
 
+        if (item.comments && item.comments.length) {
+            const cmtHtml = item.comments.map(c =>
+                `<em>[${c.visibility === 'teacher_only' ? 'private' : 'public'}] ${c.first_name} ${c.last_name}: ${c.content}</em>`
+            ).join('<br>');
+            parts.push(`<br>${cmtHtml}`);
+        }
+
         if (user.role === 'teacher') {
             if (item.status === 'waiting') {
                 parts.push(`<button onclick="invite(${item.id},'temp')">Temp invite</button>`);
@@ -88,6 +95,16 @@ function renderQueue(queue) {
             }
             if (item.status === 'invited_perm') {
                 parts.push(`<button onclick="finishMeeting(${item.id})">Finish meeting</button>`);
+            }
+            parts.push(`<br><input type="text" id="cmt-${item.id}" placeholder="Add comment…" size="30"><select id="vis-${item.id}"><option value="teacher_only">Private</option><option value="public">Public</option></select><button onclick="addComment(${item.id})">Add</button>`);
+        }
+
+        if (user.role === 'student' && item.status !== 'done') {
+            const myOwn = String(item.student_id) === String(user.id);
+            if (myOwn) {
+                parts.push(`<br><input type="text" id="cmt-${item.id}" placeholder="Add comment…" size="30"><select id="vis-${item.id}"><option value="public">Public</option><option value="teacher_only">Private</option></select><button onclick="addComment(${item.id})">Add</button>`);
+            } else {
+                parts.push(`<br><input type="text" id="cmt-${item.id}" placeholder="Add public comment…" size="30"><button onclick="addComment(${item.id})">Add</button>`);
             }
         }
 
@@ -175,6 +192,19 @@ async function setSlot(itemId) {
     try {
         await api('POST', `/api/rooms/${roomId}/queue/${itemId}/slot`, { datetime: val });
         setMsg('msg', 'Slot set.');
+        loadQueue();
+    } catch (err) {
+        setMsg('msg', err.message);
+    }
+}
+
+async function addComment(itemId) {
+    const content    = document.getElementById(`cmt-${itemId}`)?.value?.trim();
+    const visibility = document.getElementById(`vis-${itemId}`)?.value ?? 'teacher_only';
+    if (!content) return;
+    try {
+        await api('POST', `/api/rooms/${roomId}/queue/${itemId}/comments`, { content, visibility });
+        setMsg('msg', 'Comment added.');
         loadQueue();
     } catch (err) {
         setMsg('msg', err.message);
