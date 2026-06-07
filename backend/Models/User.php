@@ -60,4 +60,20 @@ class User extends Model
 
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
+
+    public function findByFacultyNumber(string $facultyNumber): ?array
+    {
+        $stmt = $this->db->prepare(
+            "SELECT * FROM users WHERE faculty_number = ? LIMIT 1"
+        );
+        $stmt->execute([$facultyNumber]);
+        return $stmt->fetch(\PDO::FETCH_ASSOC) ?: null;
+    }
+
+    public function update(int $id, array $data): void
+    {
+        $fields = implode(', ', array_map(fn($k) => "$k = ?", array_keys($data)));
+        $stmt   = $this->db->prepare("UPDATE users SET $fields WHERE id = ?");
+        $stmt->execute([...array_values($data), $id]);
+    }
 }
