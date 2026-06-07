@@ -15,12 +15,11 @@
     <button onclick="setStatus('closed')">Close</button>
     <button onclick="setStatus('archived')">Archive</button>
     &nbsp;
-    <button onclick="inviteAll()">Invite All</button>
     <button onclick="loadQueue()">Refresh</button>
 </div>
 
 <div id="student-controls" style="display:none">
-    <button onclick="joinQueue()">Join Queue</button>
+    <button id="join-btn"  onclick="joinQueue()">Join Queue</button>
     <button id="leave-btn" onclick="leaveQueue()" style="display:none">Leave Queue</button>
 </div>
 
@@ -35,6 +34,13 @@
 const roomId = <?= (int)$roomId ?>;
 const user   = requireAuth();
 let   myItem = null;
+
+function fmtSeconds(s) {
+    if (s === null || s === undefined) return '—';
+    const m = Math.floor(s / 60);
+    const sec = s % 60;
+    return m > 0 ? `${m}m ${sec}s` : `${sec}s`;
+}
 
 async function loadQueue() {
     try {
@@ -62,7 +68,13 @@ function renderQueue(queue) {
         const div   = document.createElement('div');
         let   parts = [`#${item.position} — ${item.first_name} ${item.last_name} [${item.status}]`];
 
-        if (item.eta) parts.push(`ETA: ${new Date(item.eta).toLocaleTimeString()}`);
+        if (item.eta && item.status === 'waiting') {
+            parts.push(`ETA: ${new Date(item.eta).toLocaleTimeString()}`);
+        }
+
+        if (item.status === 'done' && item.times) {
+            parts.push(`| Queue: ${fmtSeconds(item.times.queue_seconds)} | Meeting: ${fmtSeconds(item.times.meeting_seconds)}`);
+        }
 
         if (user.role === 'teacher') {
             if (item.status === 'waiting') {
@@ -73,6 +85,9 @@ function renderQueue(queue) {
             }
             if (item.status === 'invited_temp') {
                 parts.push(`<button onclick="studentReturn(${item.id})">Mark returned</button>`);
+            }
+            if (item.status === 'invited_perm') {
+                parts.push(`<button onclick="finishMeeting(${item.id})">Finish meeting</button>`);
             }
         }
 
@@ -85,12 +100,18 @@ function renderQueue(queue) {
 
 function updateStudentControls(item) {
     if (user.role !== 'student') return;
-    document.getElementById('leave-btn').style.display = item ? 'inline' : 'none';
+
+    const inQueue  = item && item.status !== 'done';
+    const canLeave = item && item.status === 'waiting';
+    const inMeet   = item && (item.status === 'invited_perm');
+
+    document.getElementById('join-btn').style.display  = item ? 'none' : 'inline';
+    document.getElementById('leave-btn').style.display = canLeave ? 'inline' : 'none';
 
     const linkDiv = document.getElementById('meeting-link');
-    if (item && (item.status === 'invited_temp' || item.status === 'invited_perm') && item.meeting_link) {
-        document.getElementById('meeting-href').href        = item.meeting_link;
-        document.getElementById('meeting-href').textContent = item.meeting_link;
+    if (inMeet) {
+        document.getElementById('meeting-href').href        = item.meeting_link || '#';
+        document.getElementById('meeting-href').textContent = item.meeting_link || '(link pending)';
         linkDiv.style.display = 'block';
     } else {
         linkDiv.style.display = 'none';
@@ -128,22 +149,11 @@ async function invite(itemId, mode) {
     }
 }
 
-async function inviteAll() {
+async function finishMeeting(itemId) {
     try {
-        const data = await api('POST', `/api/rooms/${roomId}/invite-all`);
-        setMsg('msg', `Invited ${data.invited_count} student(s). Link: ${data.meeting_link || '—'}`);
-        loadQueue();
-    } catch (err) {
-        setMsg('msg', err.message);
-    }
-}
-
-async function setSlot(itemId) {
-    const val = document.getElementById(`slot-${itemId}`).value;
-    if (!val) { setMsg('msg', 'Pick a date/time first.'); return; }
-    try {
-        await api('POST', `/api/rooms/${roomId}/queue/${itemId}/slot`, { datetime: val });
-        setMsg('msg', 'Slot set.');
+        const data = await api('POST', `/api/rooms/${roomId}/queue/${itemId}/finish`);
+        const t = data.times ?? {};
+        setMsg('msg', `Done. Queue time: ${fmtSeconds(t.queue_seconds)}, Meeting time: ${fmtSeconds(t.meeting_seconds)}`);
         loadQueue();
     } catch (err) {
         setMsg('msg', err.message);
@@ -154,6 +164,17 @@ async function studentReturn(itemId) {
     try {
         await api('POST', `/api/rooms/${roomId}/queue/${itemId}/return`);
         setMsg('msg', 'Student returned to queue.');
+        loadQueue();
+    } catch (err) {
+        setMsg('msg', err.message);
+    }
+}
+
+async function setSlot(itemId) {
+    const val = document.getElementById(`slot-${itemId}`).value;
+    try {
+        await api('POST', `/api/rooms/${roomId}/queue/${itemId}/slot`, { datetime: val });
+        setMsg('msg', 'Slot set.');
         loadQueue();
     } catch (err) {
         setMsg('msg', err.message);
