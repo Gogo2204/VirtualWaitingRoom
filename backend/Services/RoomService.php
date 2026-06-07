@@ -56,16 +56,7 @@ class RoomService
             return [];
         }
 
-        $rooms = [];
-        foreach ($teacherIds as $teacherId) {
-            foreach ($this->roomModel->findByTeacher($teacherId) as $room) {
-                if ($room['status'] === 'open') {
-                    $rooms[] = $room;
-                }
-            }
-        }
-
-        return $rooms;
+        return $this->roomModel->findByTeachersWithStatus($teacherIds, 'open');
     }
 
     public function getQueue(int $roomId, int $requesterId): array
@@ -117,7 +108,12 @@ class RoomService
         $itemId = $this->roomItemModel->joinQueue($roomId, $studentId, $position);
         $this->recalcEtas($roomId);
 
-        return $this->roomItemModel->findById($itemId);
+        $item = $this->roomItemModel->findById($itemId);
+        if (!$item) {
+            throw new \RuntimeException('Failed to retrieve queue item.', 500);
+        }
+
+        return $item;
     }
 
     public function leaveQueue(int $roomItemId, int $studentId): void
@@ -191,10 +187,10 @@ class RoomService
             throw new \RuntimeException('Room not found.', 404);
         }
 
-        $waiting = array_filter(
+        $waiting = array_values(array_filter(
             $this->roomModel->getQueue($roomId),
             fn($i) => $i['status'] === 'waiting'
-        );
+        ));
 
         foreach ($waiting as $item) {
             $this->roomItemModel->updateStatus((int)$item['id'], 'invited_perm');
