@@ -143,6 +143,21 @@ class RoomService
         $this->recalcEtas($roomId);
     }
 
+    public function updateRoomStatus(int $roomId, string $status): void
+    {
+        $room = $this->roomModel->findById($roomId);
+        if (!$room) {
+            throw new \RuntimeException('Room not found.', 404);
+        }
+
+        $allowed = ['open', 'closed', 'archived'];
+        if (!in_array($status, $allowed, true)) {
+            throw new \InvalidArgumentException('Status must be one of: ' . implode(', ', $allowed));
+        }
+
+        $this->roomModel->updateStatus($roomId, $status);
+    }
+
     public function inviteStudent(int $roomItemId, string $mode): array
     {
         if (!in_array($mode, ['temp', 'perm'], true)) {
