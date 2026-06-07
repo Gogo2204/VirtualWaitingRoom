@@ -159,7 +159,7 @@ class RoomController
         }
     }
 
-    public function finishMeeting(int $roomId, int $itemId): void
+    public function finishMeeting(int $itemId): void
     {
         try {
             $result = $this->roomService->finishMeeting($itemId);

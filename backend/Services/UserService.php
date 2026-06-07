@@ -57,7 +57,7 @@ class UserService
             $existing = $this->userModel->findByFacultyNumber($fn);
 
             if ($existing) {
-                if ($this->teacherStudentModel) {
+                if ($this->teacherStudentModel !== null) {
                     $this->teacherStudentModel->importBatch($teacherId, [(int)$existing['id']]);
                 }
                 $skipped++;
