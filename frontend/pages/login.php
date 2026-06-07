@@ -1,51 +1,59 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Login</title>
-</head>
-<body>
+<?php $pageTitle = 'Login'; require_once __DIR__ . '/../partials/head.php'; ?>
+<?php require_once __DIR__ . '/../partials/nav.php'; ?>
 
-<h2>Login</h2>
+<div class="auth-wrapper">
+    <div class="auth-card">
+        <h4 class="fw-bold text-center mb-1">Sign in</h4>
+        <p class="text-center text-muted small mb-4">Virtual Waiting Room</p>
 
-<input type="email"    id="email"    placeholder="Email" /><br>
-<input type="password" id="password" placeholder="Password" /><br>
-<button onclick="login()">Login</button>
+        <div class="mb-3">
+            <label for="email" class="form-label">Email</label>
+            <input type="email" id="email" class="form-control" placeholder="you@example.com" autofocus>
+        </div>
+        <div class="mb-4">
+            <label for="password" class="form-label">Password</label>
+            <input type="password" id="password" class="form-control" placeholder="Password">
+        </div>
 
-<p id="msg"></p>
+        <button onclick="login()" class="btn btn-primary w-100">Sign in</button>
 
-<p>Student? <a href="/register">Register here</a></p>
+        <div id="msg" class="alert alert-danger py-2 mt-3 mb-0 small" style="display:none"></div>
+
+        <p class="text-center text-muted small mt-4 mb-0">
+            New student? <a href="/register">Register here</a>
+        </p>
+    </div>
+</div>
 
 <script>
 async function login() {
-    const email    = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-
+    const msgEl = document.getElementById('msg');
+    msgEl.style.display = 'none';
     try {
         const res  = await fetch('/api/auth/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password })
+            body: JSON.stringify({
+                email:    document.getElementById('email').value,
+                password: document.getElementById('password').value,
+            })
         });
-
         const data = await res.json();
-
         if (!res.ok) {
-            document.getElementById('msg').textContent = data.message ?? 'Login failed.';
+            msgEl.textContent   = data.message ?? 'Login failed.';
+            msgEl.style.display = 'block';
             return;
         }
-
         localStorage.setItem('token', data.token);
         localStorage.setItem('user',  JSON.stringify(data.user));
-
         window.location.href = '/dashboard';
-
-    } catch (err) {
-        console.error(err);
-        document.getElementById('msg').textContent = 'Network error.';
+    } catch {
+        msgEl.textContent   = 'Network error.';
+        msgEl.style.display = 'block';
     }
 }
+
+document.addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
 </script>
 
-</body>
-</html>
+<?php require_once __DIR__ . '/../partials/foot.php'; ?>
