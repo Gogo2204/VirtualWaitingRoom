@@ -37,17 +37,22 @@ class CommentService
         return $this->commentModel->findById($id);
     }
 
-    public function getComments(int $roomItemId, string $requesterRole): array
+    public function getComments(int $roomItemId, int $requesterId, string $requesterRole): array
     {
-        $comments = $this->commentModel->getForRoomItem($roomItemId);
+        $comments      = $this->commentModel->getForRoomItem($roomItemId);
+        $item          = $this->roomItemModel->findById($roomItemId);
+        $itemStudentId = $item ? (int)$item['student_id'] : null;
 
-        if ($requesterRole !== 'teacher' && $requesterRole !== 'admin') {
-            $comments = array_values(array_filter(
-                $comments,
-                fn($c) => $c['visibility'] === 'public'
-            ));
+        if ($requesterRole === 'admin') {
+            return $comments;
         }
 
-        return $comments;
+        return array_values(array_filter($comments, function ($c) use ($requesterId, $itemStudentId) {
+            if ($c['visibility'] === 'public') {
+                return true;
+            }
+            // private: visible only to the comment author and the item's own student
+            return (int)$c['user_id'] === $requesterId || $requesterId === $itemStudentId;
+        }));
     }
 }
