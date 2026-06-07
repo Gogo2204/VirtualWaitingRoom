@@ -42,6 +42,6 @@ class Comment extends Model
 
         $stmt->execute([$roomItemId]);
 
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
 }
