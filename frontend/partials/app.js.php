@@ -19,8 +19,17 @@ async function api(method, path, body = null) {
     return data;
 }
 
-function setMsg(id, text) {
+function setMsg(id, text, type = 'danger') {
     const el = document.getElementById(id);
-    if (el) el.textContent = text;
+    if (!el) return;
+    el.textContent = text;
+    el.className   = text ? `small mt-2 text-${type}` : 'small mt-2';
+}
+
+function fmtSeconds(s) {
+    if (s === null || s === undefined) return '—';
+    const m   = Math.floor(s / 60);
+    const sec = Math.round(s % 60);
+    return m > 0 ? `${m}m ${sec}s` : `${sec}s`;
 }
 </script>
