@@ -88,7 +88,7 @@
 ### Users (missing)
 - [ ] `POST /api/users/import-csv` — teacher uploads CSV; validates, creates students, links them
 - [ ] `GET  /api/users/students` — teacher lists their students
-- [ ] `PUT  /api/users/password` — any user changes own password (for teachers after first login)
+- [x] `PUT  /api/users/password` — any user changes own password (for teachers after first login)
 
 ### Subjects
 - [ ] `GET  /api/subjects` — list all (any authenticated user)
