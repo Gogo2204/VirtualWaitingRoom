@@ -38,7 +38,7 @@ class User extends Model
     public function findById(int $id): ?array
     {
         $stmt = $this->db->prepare(
-            "SELECT * FROM users WHERE id = ? LIMIT 1"
+            "SELECT * FROM users WHERE id = :id LIMIT 1"
         );
 
         $stmt->execute([$id]);

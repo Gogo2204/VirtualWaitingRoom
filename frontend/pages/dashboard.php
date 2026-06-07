@@ -25,7 +25,6 @@
 <script>
     const token = localStorage.getItem('token');
     const user  = JSON.parse(localStorage.getItem('user') || 'null');
-    console.log(user)
 
     if (!token) {
         window.location.href = '/login';
