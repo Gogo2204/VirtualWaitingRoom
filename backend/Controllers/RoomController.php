@@ -45,7 +45,7 @@ class RoomController
             $queue = $this->roomService->getQueue($roomId, (int)$user['sub']);
             echo json_encode(['success' => true, 'queue' => $queue]);
         } catch (\RuntimeException $e) {
-            $code = ($e->getCode() >= 400 && $e->getCode() < 600) ? $e->getCode() : 500;
+            $code = $e->getCode() ?: 500;
             http_response_code($code);
             echo json_encode(['success' => false, 'message' => $e->getMessage()]);
         }
@@ -63,7 +63,7 @@ class RoomController
             http_response_code(422);
             echo json_encode(['success' => false, 'message' => $e->getMessage()]);
         } catch (\RuntimeException $e) {
-            $code = ($e->getCode() >= 400 && $e->getCode() < 600) ? $e->getCode() : 500;
+            $code = $e->getCode() ?: 500;
             http_response_code($code);
             echo json_encode(['success' => false, 'message' => $e->getMessage()]);
         }
@@ -83,7 +83,7 @@ class RoomController
             http_response_code(201);
             echo json_encode(['success' => true, 'item' => $item]);
         } catch (\RuntimeException $e) {
-            $code = ($e->getCode() >= 400 && $e->getCode() < 600) ? $e->getCode() : 500;
+            $code = $e->getCode() ?: 500;
             http_response_code($code);
             echo json_encode(['success' => false, 'message' => $e->getMessage()]);
         }
@@ -105,7 +105,7 @@ class RoomController
             $this->roomService->leaveQueue($roomItemId, (int)$user['sub']);
             echo json_encode(['success' => true]);
         } catch (\RuntimeException $e) {
-            $code = ($e->getCode() >= 400 && $e->getCode() < 600) ? $e->getCode() : 500;
+            $code = $e->getCode() ?: 500;
             http_response_code($code);
             echo json_encode(['success' => false, 'message' => $e->getMessage()]);
         }
@@ -123,7 +123,7 @@ class RoomController
             http_response_code(422);
             echo json_encode(['success' => false, 'message' => $e->getMessage()]);
         } catch (\RuntimeException $e) {
-            $code = ($e->getCode() >= 400 && $e->getCode() < 600) ? $e->getCode() : 500;
+            $code = $e->getCode() ?: 500;
             http_response_code($code);
             echo json_encode(['success' => false, 'message' => $e->getMessage()]);
         }
@@ -135,7 +135,7 @@ class RoomController
             $this->roomService->studentReturns($itemId);
             echo json_encode(['success' => true]);
         } catch (\RuntimeException $e) {
-            $code = ($e->getCode() >= 400 && $e->getCode() < 600) ? $e->getCode() : 500;
+            $code = $e->getCode() ?: 500;
             http_response_code($code);
             echo json_encode(['success' => false, 'message' => $e->getMessage()]);
         }
@@ -153,7 +153,7 @@ class RoomController
             http_response_code(422);
             echo json_encode(['success' => false, 'message' => $e->getMessage()]);
         } catch (\RuntimeException $e) {
-            $code = ($e->getCode() >= 400 && $e->getCode() < 600) ? $e->getCode() : 500;
+            $code = $e->getCode() ?: 500;
             http_response_code($code);
             echo json_encode(['success' => false, 'message' => $e->getMessage()]);
         }
@@ -165,7 +165,7 @@ class RoomController
             $result = $this->roomService->inviteAll($roomId);
             echo json_encode(['success' => true] + $result);
         } catch (\RuntimeException $e) {
-            $code = ($e->getCode() >= 400 && $e->getCode() < 600) ? $e->getCode() : 500;
+            $code = $e->getCode() ?: 500;
             http_response_code($code);
             echo json_encode(['success' => false, 'message' => $e->getMessage()]);
         }

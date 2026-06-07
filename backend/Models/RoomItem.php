@@ -101,13 +101,13 @@ class RoomItem extends Model
         $stmt->execute([$roomId, $removedPosition]);
     }
 
-    public function setEta(int $id, string $datetime): bool
+    public function setEta(int $id, string $datetime): void
     {
         $stmt = $this->db->prepare("
             UPDATE room_items SET eta = ? WHERE id = ?
         ");
 
-        return $stmt->execute([$datetime, $id]);
+        $stmt->execute([$datetime, $id]);
     }
 
     public function recalcEtas(int $roomId, int $waitTimeMinutes): void
