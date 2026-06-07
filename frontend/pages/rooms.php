@@ -1,59 +1,96 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Rooms</title>
-</head>
-<body>
+<?php $pageTitle = 'Rooms'; require_once __DIR__ . '/../partials/head.php'; ?>
+<?php require_once __DIR__ . '/../partials/nav.php'; ?>
 
-<h2>Rooms</h2>
-<p><a href="/dashboard">← Dashboard</a></p>
+<div class="container-lg py-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <h4 class="fw-bold mb-0">Rooms</h4>
+        <div class="d-flex flex-wrap gap-2 align-items-center">
+            <div class="btn-group btn-group-sm" id="filter-bar">
+                <button class="btn btn-outline-secondary active" data-filter="all">All</button>
+                <button class="btn btn-outline-secondary" data-filter="open">Open</button>
+                <button class="btn btn-outline-secondary" data-filter="closed">Closed</button>
+                <button class="btn btn-outline-secondary" data-filter="archived">Archived</button>
+            </div>
+            <div id="teacher-actions" style="display:none" class="d-flex gap-2">
+                <a href="/rooms/create" class="btn btn-sm btn-primary">+ New Room</a>
+                <a href="/stats" class="btn btn-sm btn-outline-secondary">Statistics</a>
+            </div>
+            <div id="student-actions" style="display:none">
+                <a href="/stats" class="btn btn-sm btn-outline-secondary">Statistics</a>
+            </div>
+        </div>
+    </div>
 
-<div id="teacher-section" style="display:none">
-    <p><a href="/rooms/create">+ Create Room</a> &nbsp; <a href="/stats">Statistics</a></p>
+    <p id="msg" class="text-danger small"></p>
+
+    <div id="rooms-grid" class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-3">
+        <div class="col"><p class="text-muted small"><em>Loading…</em></p></div>
+    </div>
+
+    <p class="mt-3 mb-0"><span id="refresh-info" class="refresh-info"></span></p>
 </div>
-
-<div id="student-section" style="display:none">
-    <p><a href="/stats">Statistics</a></p>
-</div>
-
-<div id="rooms-list"></div>
-<p id="msg"></p>
 
 <?php require_once __DIR__ . '/../partials/app.js.php'; ?>
 <script>
 const user = requireAuth('teacher', 'student', 'admin');
+let allRooms     = [];
+let activeFilter = 'all';
 
-(async () => {
-    if (user.role === 'teacher' || user.role === 'admin') {
-        document.getElementById('teacher-section').style.display = 'block';
-    } else if (user.role === 'student') {
-        document.getElementById('student-section').style.display = 'block';
+if (user.role === 'teacher' || user.role === 'admin') {
+    document.getElementById('teacher-actions').style.display = 'flex';
+} else {
+    document.getElementById('student-actions').style.display = 'block';
+}
+
+document.querySelectorAll('#filter-bar .btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('#filter-bar .btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        activeFilter = btn.dataset.filter;
+        renderRooms();
+    });
+});
+
+const STATUS_LABEL = { open: 'Open', closed: 'Closed', archived: 'Archived' };
+
+function renderRooms() {
+    const grid  = document.getElementById('rooms-grid');
+    const rooms = activeFilter === 'all' ? allRooms : allRooms.filter(r => r.status === activeFilter);
+
+    if (!rooms.length) {
+        grid.innerHTML = '<div class="col"><p class="text-muted small">No rooms found.</p></div>';
+        return;
     }
 
+    grid.innerHTML = rooms.map(r => `
+        <div class="col">
+            <div class="room-card">
+                <div class="d-flex justify-content-between align-items-start gap-2">
+                    <div class="overflow-hidden">
+                        <h6 class="mb-1 text-truncate"><a href="/rooms/${r.id}">${r.name}</a></h6>
+                        <small class="text-muted">${r.subject_type}</small>
+                        ${r.description ? `<p class="small text-muted mt-1 mb-0 text-truncate" title="${r.description}">${r.description}</p>` : ''}
+                    </div>
+                    <span class="sb sb-${r.status} flex-shrink-0">${STATUS_LABEL[r.status] ?? r.status}</span>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+async function loadRooms() {
     try {
         const data = await api('GET', '/api/rooms');
-        const list = document.getElementById('rooms-list');
-
-        if (!data.rooms.length) {
-            list.textContent = user.role === 'student' ? 'No open rooms available.' : 'No rooms yet.';
-            return;
-        }
-
-        data.rooms.forEach(room => {
-            const div  = document.createElement('div');
-            const link = document.createElement('a');
-            link.href        = `/rooms/${room.id}`;
-            link.textContent = room.name;
-            div.appendChild(link);
-            div.appendChild(document.createTextNode(` — ${room.subject_type} [${room.status}]`));
-            list.appendChild(div);
-        });
+        allRooms   = data.rooms;
+        renderRooms();
+        document.getElementById('refresh-info').textContent = `Updated ${new Date().toLocaleTimeString()}`;
     } catch (err) {
         setMsg('msg', err.message);
     }
-})();
+}
+
+loadRooms();
+setInterval(loadRooms, 10000);
 </script>
 
-</body>
-</html>
+<?php require_once __DIR__ . '/../partials/foot.php'; ?>
