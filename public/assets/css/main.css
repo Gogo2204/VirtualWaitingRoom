@@ -100,8 +100,8 @@ body {
     transition: box-shadow .15s;
 }
 .room-card:hover         { box-shadow: 0 2px 8px rgba(0,0,0,.09); }
-.room-card h6 a          { color: var(--vwr-text); text-decoration: none; font-weight: 600; }
-.room-card h6 a:hover    { color: var(--vwr-primary); }
+.room-card h6            { color: var(--vwr-text); font-weight: 600; }
+a.room-card:hover h6     { color: var(--vwr-primary); }
 
 /* ── Comment display ────────────────────────────────────────────── */
 .comment-list   { font-size: .8125rem; }
