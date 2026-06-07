@@ -71,8 +71,7 @@ class AuthService
             'last_name'     => $lastName,
             'email'         => $email,
             'password_hash' => password_hash($password, PASSWORD_BCRYPT),
-            'status'        => 'registered',
-            'updated_at'    => date('Y-m-d H:i:s')
+            'status'        => 'registered'
         ]);
 
         $user = $this->userModel->findById($existing['id']);
@@ -114,8 +113,7 @@ class AuthService
         }
 
         $this->userModel->update($user['id'], [
-            'password_hash' => password_hash($newPassword, PASSWORD_BCRYPT),
-            'updated_at'    => date('Y-m-d H:i:s')
+            'password_hash' => password_hash($newPassword, PASSWORD_BCRYPT)
         ]);
 
         $user = $this->userModel->findById($user['id']);
