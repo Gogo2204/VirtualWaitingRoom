@@ -2,27 +2,27 @@
 
 namespace App\Controllers;
 
-use App\Services\AuthService;
+use App\Services\UserService;
 
-class AuthController
+class UserController
 {
-    public function __construct(private AuthService $authService) {}
+    public function __construct(private UserService $userService) {}
 
-    public function login(): void
+    public function createTeacher(): void
     {
         $body = json_decode(file_get_contents('php://input'), true);
 
-        $email    = trim($body['email'] ?? '');
-        $password = trim($body['password'] ?? '');
+        $firstName = trim($body['first_name'] ?? '');
+        $lastName  = trim($body['last_name']  ?? '');
+        $email     = trim($body['email']      ?? '');
 
         try {
-            $result = $this->authService->login($email, $password);
+            $result = $this->userService->createTeacher($firstName, $lastName, $email);
 
-            http_response_code(200);
+            http_response_code(201);
             echo json_encode([
                 'success' => true,
-                'token'   => $result['token'],
-                'user'    => $result['user'],
+                'user'    => $result,
             ]);
         } catch (\InvalidArgumentException $e) {
             http_response_code(422);

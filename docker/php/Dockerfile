@@ -5,6 +5,7 @@ RUN apt-get update && apt-get install -y \
     zip \
     unzip \
     libzip-dev \
+    msmtp \
     && docker-php-ext-install pdo pdo_mysql mysqli zip \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
@@ -17,6 +18,11 @@ RUN composer install --no-dev --no-scripts --no-autoloader --prefer-dist --no-bl
 
 COPY . .
 RUN composer dump-autoload --optimize
+
+COPY docker/php/msmtp.conf /etc/msmtprc
+RUN chmod 644 /etc/msmtprc \
+    && ln -sf /usr/bin/msmtp /usr/sbin/sendmail \
+    && echo "sendmail_path = /usr/bin/msmtp -t" > /usr/local/etc/php/conf.d/mail.ini
 
 EXPOSE 9000
 CMD ["php-fpm"]
