@@ -26,4 +26,12 @@ if (file_exists($envFile)) {
 }
 
 require_once __DIR__ . '/../vendor/autoload.php';
-require_once __DIR__ . '/../backend/Routes/api.php';
+
+$path = rtrim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');
+
+if (str_starts_with($path, '/api')) {
+    require_once __DIR__ . '/../backend/Routes/api.php';
+    exit;
+}
+
+require_once __DIR__ . '/../frontend/routes.php';

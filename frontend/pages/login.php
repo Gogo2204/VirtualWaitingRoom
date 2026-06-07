@@ -20,7 +20,7 @@ async function login() {
     const password = document.getElementById('password').value;
 
     try {
-        const res = await fetch('/api/auth/login', {
+        const res  = await fetch('/api/auth/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, password })
@@ -33,9 +33,13 @@ async function login() {
             return;
         }
 
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('user',  JSON.stringify(data.user));
+
         console.log('Token:', data.token);
         console.log('User:',  data.user);
-        document.getElementById('msg').textContent = `Logged in as ${data.user.email}`;
+
+        window.location.href = '/dashboard';
 
     } catch (err) {
         console.error(err);
