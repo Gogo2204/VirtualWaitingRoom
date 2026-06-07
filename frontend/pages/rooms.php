@@ -11,13 +11,9 @@
 
 <div id="teacher-section" style="display:none">
     <p><a href="/rooms/create">+ Create Room</a></p>
-    <div id="rooms-list"></div>
 </div>
 
-<div id="student-section" style="display:none">
-    <div id="rooms-list"></div>
-</div>
-
+<div id="rooms-list"></div>
 <p id="msg"></p>
 
 <?php require_once __DIR__ . '/../partials/app.js.php'; ?>
@@ -25,15 +21,12 @@
 const user = requireAuth('teacher', 'student', 'admin');
 
 (async () => {
+    if (user.role === 'teacher' || user.role === 'admin') {
+        document.getElementById('teacher-section').style.display = 'block';
+    }
+
     try {
         const data = await api('GET', '/api/rooms');
-
-        if (user.role === 'teacher' || user.role === 'admin') {
-            document.getElementById('teacher-section').style.display = 'block';
-        } else {
-            document.getElementById('student-section').style.display = 'block';
-        }
-
         const list = document.getElementById('rooms-list');
 
         if (!data.rooms.length) {
