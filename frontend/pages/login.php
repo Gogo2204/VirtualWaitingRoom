@@ -38,9 +38,6 @@ async function login() {
         localStorage.setItem('token', data.token);
         localStorage.setItem('user',  JSON.stringify(data.user));
 
-        console.log('Token:', data.token);
-        console.log('User:',  data.user);
-
         window.location.href = '/dashboard';
 
     } catch (err) {

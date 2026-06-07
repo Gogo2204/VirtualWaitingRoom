@@ -16,6 +16,10 @@ match (true) {
         require_once __DIR__ . '/pages/register.php';
     })(),
 
+    $method === 'GET' && $path === '/change-password' => (function () {
+        require_once __DIR__ . '/pages/change-password.php';
+    })(),
+
     $method === 'GET' && $path === '/dashboard' => (function () {
         require_once __DIR__ . '/pages/dashboard.php';
     })(),

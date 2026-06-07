@@ -35,6 +35,17 @@ class User extends Model
         return (int)$this->db->lastInsertId();
     }
 
+    public function findById(int $id): ?array
+    {
+        $stmt = $this->db->prepare(
+            "SELECT * FROM users WHERE id = :id LIMIT 1"
+        );
+
+        $stmt->execute([$id]);
+
+        return $stmt->fetch(\PDO::FETCH_ASSOC) ?: null;
+    }
+
     public function findByEmail(string $email): ?array
     {
         $stmt = $this->db->prepare(
@@ -43,6 +54,15 @@ class User extends Model
 
         $stmt->execute([$email]);
 
+        return $stmt->fetch(\PDO::FETCH_ASSOC) ?: null;
+    }
+
+    public function findByFacultyNumber(string $facultyNumber): ?array
+    {
+        $stmt = $this->db->prepare(
+            "SELECT * FROM users WHERE faculty_number = ? LIMIT 1"
+        );
+        $stmt->execute([$facultyNumber]);
         return $stmt->fetch(\PDO::FETCH_ASSOC) ?: null;
     }
 
@@ -59,15 +79,6 @@ class User extends Model
         $stmt->execute([$teacherId]);
 
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
-    }
-
-    public function findByFacultyNumber(string $facultyNumber): ?array
-    {
-        $stmt = $this->db->prepare(
-            "SELECT * FROM users WHERE faculty_number = ? LIMIT 1"
-        );
-        $stmt->execute([$facultyNumber]);
-        return $stmt->fetch(\PDO::FETCH_ASSOC) ?: null;
     }
 
     public function update(int $id, array $data): void
