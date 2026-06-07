@@ -17,4 +17,10 @@ class Subject extends Model
 
         return (int)$this->db->lastInsertId();
     }
+
+    public function getAll(): array
+    {
+        $stmt = $this->db->query("SELECT * FROM subjects ORDER BY type ASC");
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
 }
