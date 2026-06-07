@@ -35,10 +35,10 @@
 - [x] `RoomItem::reorderAfterRemoval(int $roomId, int $removedPosition): void`
 - [x] `RoomItem::recalcEtas(int $roomId, int $waitTimeMinutes): void`
 - [x] `RoomItem::getByStudentAndRoom(int $studentId, int $roomId): ?array`
-- [ ] `Subject::getAll(): array`
-- [ ] `Subject::findById(int $id): ?array`
-- [ ] `TeacherStudent::importBatch(int $teacherId, array $studentIds): void` — bulk insert, skip duplicates
-- [ ] `TeacherStudent::isLinked(int $teacherId, int $studentId): bool`
+- [x] `Subject::getAll(): array`
+- [x] `Subject::findById(int $id): ?array`
+- [x] `TeacherStudent::importBatch(int $teacherId, array $studentIds): void` — bulk insert, skip duplicates
+- [x] `TeacherStudent::isLinked(int $teacherId, int $studentId): bool`
 
 ---
 
@@ -48,27 +48,21 @@
 - [x] `AuthService::register()` — student self-registers using faculty number
 - [x] `UserService::createTeacher()` — generates temp password, sends email
 - [ ] `UserService::importStudentsCsv(int $teacherId, string $csvContent): array` — validate format (first_name, last_name, faculty_number), create/update students, link to teacher, return result summary
-- [ ] `RoomService::createRoom(int $teacherId, array $data): array`
-- [ ] `RoomService::listRooms(int $teacherId): array`
-- [ ] `RoomService::getQueue(int $roomId, int $requesterId): array` — teacher sees all comments; student sees only `public` ones
-- [ ] `RoomService::joinQueue(int $roomId, int $studentId): array` — append to queue, calculate initial ETA
-- [ ] `RoomService::leaveQueue(int $roomItemId, int $studentId): void`
-- [ ] `RoomService::inviteStudent(int $roomItemId, string $mode): array` — mode `temp` or `perm`; generate meeting link + optional access code; update status
-- [ ] `RoomService::inviteAll(int $roomId): array` — invite entire queue; mark room as group session
-- [ ] `RoomService::studentReturns(int $roomItemId): void` — called after temp invite ends; restore position, set status back to `waiting`
-- [ ] `RoomService::setManualSlot(int $roomItemId, string $datetime): void` — teacher assigns explicit start time; update `eta`
-- [ ] `RoomService::recalcEtas(int $roomId): void` — recompute all ETAs after any queue change
+- [x] `RoomService::createRoom(int $teacherId, array $data): array`
+- [x] `RoomService::listRooms(int $teacherId): array`
+- [x] `RoomService::getQueue(int $roomId, int $requesterId): array` — teacher sees all comments; student sees only `public` ones
+- [x] `RoomService::joinQueue(int $roomId, int $studentId): array` — append to queue, calculate initial ETA
+- [x] `RoomService::leaveQueue(int $roomItemId, int $studentId): void`
+- [x] `RoomService::inviteStudent(int $roomItemId, string $mode): array` — mode `temp` or `perm`; generate meeting link + optional access code; update status
+- [x] `RoomService::inviteAll(int $roomId): array` — invite entire queue; mark room as group session
+- [x] `RoomService::studentReturns(int $roomItemId): void` — called after temp invite ends; restore position, set status back to `waiting`
+- [x] `RoomService::setManualSlot(int $roomItemId, string $datetime): void` — teacher assigns explicit start time; update `eta`
+- [x] `RoomService::recalcEtas(int $roomId): void` — recompute all ETAs after any queue change
 - [ ] `CommentService::addComment(int $roomItemId, int $userId, string $content, string $visibility): array`
 - [ ] `SubjectService::create(string $type, ?string $description): array` — admin only
 - [ ] `SubjectService::list(): array`
 - [ ] `StatisticsService::getRoomStats(int $roomId): array` — avg wait time, avg session duration, count served, peak hours
 - [ ] `StatisticsService::getSubjectStats(int $teacherId, int $subjectId): array`
-- [ ] Meeting link generator (separate class `MeetingLinkGenerator`):
-  - [ ] `bbb` — append student token to configured base URL
-  - [ ] `zoom` — generate Zoom start URL via Zoom API or hardcoded pattern
-  - [ ] `meet` — generate Google Meet link (hardcoded pattern or OAuth)
-  - [ ] `jitsi` — generate `meet.jit.si/<room-slug>` link
-  - [ ] `custom` — return the URL stored in `rooms.url` verbatim
 
 ---
 
@@ -92,19 +86,19 @@
 - [ ] `DELETE /api/subjects/:id` — admin removes subject (only if no rooms reference it)
 
 ### Rooms
-- [ ] `POST   /api/rooms` — teacher creates room (requires teacher role)
-- [ ] `GET    /api/rooms` — teacher lists own rooms; student lists rooms where they are linked to the teacher
-- [ ] `GET    /api/rooms/:id` — get room details + queue
-- [ ] `PATCH  /api/rooms/:id/status` — teacher opens/closes/archives room
-- [ ] `GET    /api/rooms/:id/queue` — ordered queue with ETAs and (filtered) comments
+- [x] `POST   /api/rooms` — teacher creates room (requires teacher role)
+- [x] `GET    /api/rooms` — teacher lists own rooms; student lists rooms where they are linked to the teacher
+- [x] `GET    /api/rooms/:id` — get room details + queue
+- [x] `PATCH  /api/rooms/:id/status` — teacher opens/closes/archives room
+- [x] `GET    /api/rooms/:id/queue` — ordered queue with ETAs and (filtered) comments
 
 ### Queue Actions
-- [ ] `POST   /api/rooms/:id/queue` — student joins queue
-- [ ] `DELETE /api/rooms/:id/queue` — student leaves queue
-- [ ] `POST   /api/rooms/:id/queue/:itemId/invite` — teacher invites student (`mode=temp|perm`)
-- [ ] `POST   /api/rooms/:id/queue/:itemId/return` — student returns after temp invite
-- [ ] `POST   /api/rooms/:id/queue/:itemId/slot` — teacher sets manual time slot
-- [ ] `POST   /api/rooms/:id/invite-all` — teacher invites entire queue
+- [x] `POST   /api/rooms/:id/queue` — student joins queue
+- [x] `DELETE /api/rooms/:id/queue` — student leaves queue
+- [x] `POST   /api/rooms/:id/queue/:itemId/invite` — teacher invites student (`mode=temp|perm`)
+- [x] `POST   /api/rooms/:id/queue/:itemId/return` — student returns after temp invite
+- [x] `POST   /api/rooms/:id/queue/:itemId/slot` — teacher sets manual time slot
+- [x] `POST   /api/rooms/:id/invite-all` — teacher invites entire queue
 
 ### Comments
 - [ ] `POST /api/rooms/:id/queue/:itemId/comments` — add comment (student or teacher)

@@ -1,0 +1,91 @@
+<?php
+
+use App\Middleware\AuthMiddleware;
+use App\Controllers\RoomController;
+use App\Services\RoomService;
+use App\Models\Room;
+use App\Models\RoomItem;
+use App\Models\Comment;
+use App\Models\Subject;
+use App\Models\TeacherStudent;
+
+function makeRoomController(): RoomController
+{
+    $db = getDb();
+    return new RoomController(new RoomService(
+        new Room($db),
+        new RoomItem($db),
+        new Comment($db),
+        new Subject($db),
+        new TeacherStudent($db)
+    ));
+}
+
+$segments  = explode('/', ltrim($path, '/'));
+$roomId    = isset($segments[2]) && is_numeric($segments[2]) ? (int)$segments[2] : null;
+$segment3  = $segments[3] ?? null;
+$itemId    = isset($segments[4]) && is_numeric($segments[4]) ? (int)$segments[4] : null;
+$segment5  = $segments[5] ?? null;
+
+match (true) {
+
+    $method === 'POST' && $path === '/api/rooms' => (function () {
+        AuthMiddleware::require('teacher');
+        makeRoomController()->createRoom();
+    })(),
+
+    $method === 'GET' && $path === '/api/rooms' => (function () {
+        AuthMiddleware::require('teacher', 'student');
+        makeRoomController()->listRooms();
+    })(),
+
+    $method === 'GET' && $roomId !== null && $segment3 === null => (function () use ($roomId) {
+        AuthMiddleware::require('teacher', 'student', 'admin');
+        makeRoomController()->getRoom($roomId);
+    })(),
+
+    $method === 'PATCH' && $roomId !== null && $segment3 === 'status' => (function () use ($roomId) {
+        AuthMiddleware::require('teacher');
+        makeRoomController()->updateRoomStatus($roomId);
+    })(),
+
+    $method === 'GET' && $roomId !== null && $segment3 === 'queue' && $itemId === null => (function () use ($roomId) {
+        AuthMiddleware::require('teacher', 'student');
+        makeRoomController()->getQueue($roomId);
+    })(),
+
+    $method === 'POST' && $roomId !== null && $segment3 === 'queue' && $itemId === null => (function () use ($roomId) {
+        AuthMiddleware::require('student');
+        makeRoomController()->joinQueue($roomId);
+    })(),
+
+    $method === 'DELETE' && $roomId !== null && $segment3 === 'queue' && $itemId === null => (function () use ($roomId) {
+        AuthMiddleware::require('student');
+        makeRoomController()->leaveQueue($roomId);
+    })(),
+
+    $method === 'POST' && $roomId !== null && $segment3 === 'queue' && $itemId !== null && $segment5 === 'invite' => (function () use ($roomId, $itemId) {
+        AuthMiddleware::require('teacher');
+        makeRoomController()->inviteStudent($roomId, $itemId);
+    })(),
+
+    $method === 'POST' && $roomId !== null && $segment3 === 'queue' && $itemId !== null && $segment5 === 'return' => (function () use ($roomId, $itemId) {
+        AuthMiddleware::require('student');
+        makeRoomController()->studentReturns($roomId, $itemId);
+    })(),
+
+    $method === 'POST' && $roomId !== null && $segment3 === 'queue' && $itemId !== null && $segment5 === 'slot' => (function () use ($roomId, $itemId) {
+        AuthMiddleware::require('teacher');
+        makeRoomController()->setManualSlot($roomId, $itemId);
+    })(),
+
+    $method === 'POST' && $roomId !== null && $segment3 === 'invite-all' => (function () use ($roomId) {
+        AuthMiddleware::require('teacher');
+        makeRoomController()->inviteAll($roomId);
+    })(),
+
+    default => (function () {
+        http_response_code(404);
+        echo json_encode(['success' => false, 'message' => 'Room route not found.']);
+    })()
+};
