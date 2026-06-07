@@ -34,7 +34,7 @@ class AuthController
 
     public function register(): void
     {
-        $body           = json_decode(file_get_contents('php://input'), true);
+        $body           = json_decode(file_get_contents('php://input'), true) ?? [];
         $firstName      = trim($body['first_name']      ?? '');
         $lastName       = trim($body['last_name']       ?? '');
         $email          = trim($body['email']           ?? '');

@@ -69,7 +69,7 @@ class AuthService
             'last_name'     => $lastName,
             'email'         => $email,
             'password_hash' => password_hash($password, PASSWORD_BCRYPT),
-            'status'        => 'imported',
+            'status'        => 'registered',
         ]);
 
         $user = $this->userModel->findById($existing['id']);
