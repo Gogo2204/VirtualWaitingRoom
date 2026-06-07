@@ -24,6 +24,19 @@ match (true) {
         require_once __DIR__ . '/pages/dashboard.php';
     })(),
 
+    $method === 'GET' && $path === '/rooms' => (function () {
+        require_once __DIR__ . '/pages/rooms.php';
+    })(),
+
+    $method === 'GET' && $path === '/rooms/create' => (function () {
+        require_once __DIR__ . '/pages/create-room.php';
+    })(),
+
+    $method === 'GET' && preg_match('#^/rooms/(\d+)$#', $path, $m) => (function () use ($m) {
+        $roomId = (int)$m[1];
+        require_once __DIR__ . '/pages/room.php';
+    })(),
+
     default => (function () {
         http_response_code(404);
         require_once __DIR__ . '/pages/404.php';
