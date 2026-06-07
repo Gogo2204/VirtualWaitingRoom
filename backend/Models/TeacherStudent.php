@@ -53,4 +53,16 @@ class TeacherStudent extends Model
 
         return $stmt->fetchAll(\PDO::FETCH_COLUMN);
     }
+
+    public function getTeacherIds(int $studentId): array
+    {
+        $stmt = $this->db->prepare("
+            SELECT teacher_id FROM teacher_student
+            WHERE student_id = ?
+        ");
+
+        $stmt->execute([$studentId]);
+
+        return $stmt->fetchAll(\PDO::FETCH_COLUMN);
+    }
 }
