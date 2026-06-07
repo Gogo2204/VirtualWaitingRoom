@@ -9,17 +9,18 @@ class User extends Model
     public function create(array $data): int
     {
         $stmt = $this->db->prepare("
-            INSERT INTO users
-            (
+            INSERT INTO users (
                 first_name,
                 last_name,
                 email,
                 password_hash,
                 faculty_number,
                 role,
-                status
+                status,
+                created_at,
+                updated_at
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
         ");
 
         $stmt->execute([
@@ -83,8 +84,12 @@ class User extends Model
 
     public function update(int $id, array $data): void
     {
+        unset($data['created_at']);
+        $data['updated_at'] = date('Y-m-d H:i:s');
+
         $fields = implode(', ', array_map(fn($k) => "$k = ?", array_keys($data)));
-        $stmt   = $this->db->prepare("UPDATE users SET $fields WHERE id = ?");
+
+        $stmt = $this->db->prepare("UPDATE users SET $fields WHERE id = ?");
         $stmt->execute([...array_values($data), $id]);
     }
 }

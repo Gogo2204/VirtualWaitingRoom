@@ -3,10 +3,14 @@
 namespace App\Services;
 
 use App\Models\User;
+use App\Models\TeacherStudent;
 
 class UserService
 {
-    public function __construct(private User $userModel) {}
+    public function __construct(
+        private User $userModel,
+        private ?TeacherStudent $teacherStudentModel = null
+    ) {}
 
     public function createTeacher(string $firstName, string $lastName, string $email): array
     {
@@ -39,6 +43,43 @@ class UserService
         unset($user['password_hash']);
 
         return $user;
+    }
+
+    public function importStudents(array $facultyNumbers, int $teacherId): array
+    {
+        $created = 0;
+        $skipped = 0;
+    
+        foreach ($facultyNumbers as $fn) {
+            $fn = trim((string)$fn);
+            if (empty($fn)) continue;
+    
+            $existing = $this->userModel->findByFacultyNumber($fn);
+    
+            if ($existing) {
+                $skipped++;
+                continue;
+            }
+    
+            $studentId = $this->userModel->create([
+                'first_name'     => '',
+                'last_name'      => '',
+                'email'          => null,
+                'password_hash'  => '',
+                'faculty_number' => $fn,
+                'role'           => 'student',
+                'status'         => 'imported',
+            ]);
+
+            if ($this->teacherStudentModel) {
+                $this->teacherStudentModel->assign($teacherId, $studentId);
+            }
+    
+            $this->teacherStudentModel->assign($teacherId, $studentId);
+            $created++;
+        }
+    
+        return ['created' => $created, 'skipped' => $skipped];
     }
 
     private function generateTempPassword(int $length = 12): string
