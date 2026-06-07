@@ -2,13 +2,24 @@
 
 use App\Middleware\AuthMiddleware;
 use App\Controllers\RoomController;
+use App\Controllers\CommentController;
 use App\Services\RoomService;
+use App\Services\CommentService;
 use App\Models\Room;
 use App\Models\RoomItem;
 use App\Models\Comment;
 use App\Models\Subject;
 use App\Models\TeacherStudent;
 use App\Models\RoomHistory;
+
+function makeCommentController(): CommentController
+{
+    $db = getDb();
+    return new CommentController(new CommentService(
+        new Comment($db),
+        new RoomItem($db)
+    ));
+}
 
 function makeRoomController(): RoomController
 {
@@ -84,6 +95,16 @@ match (true) {
     $method === 'POST' && $roomId !== null && $segment3 === 'queue' && $itemId !== null && $segment5 === 'slot' => (function () use ($roomId, $itemId) {
         AuthMiddleware::require('teacher');
         makeRoomController()->setManualSlot($roomId, $itemId);
+    })(),
+
+    $method === 'POST' && $roomId !== null && $segment3 === 'queue' && $itemId !== null && $segment5 === 'comments' => (function () use ($itemId) {
+        AuthMiddleware::require('teacher', 'student');
+        makeCommentController()->add($itemId);
+    })(),
+
+    $method === 'GET' && $roomId !== null && $segment3 === 'queue' && $itemId !== null && $segment5 === 'comments' => (function () use ($itemId) {
+        AuthMiddleware::require('teacher', 'student');
+        makeCommentController()->list($itemId);
     })(),
 
     default => (function () {
