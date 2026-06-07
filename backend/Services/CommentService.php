@@ -12,7 +12,7 @@ class CommentService
         private RoomItem $roomItemModel
     ) {}
 
-    public function addComment(int $roomItemId, int $userId, string $content, string $visibility): array
+    public function addComment(int $roomItemId, int $userId, string $requesterRole, string $content, string $visibility): array
     {
         $content = trim($content);
         if ($content === '') {
@@ -23,8 +23,13 @@ class CommentService
             throw new \InvalidArgumentException('Visibility must be "teacher_only" or "public".');
         }
 
-        if (!$this->roomItemModel->findById($roomItemId)) {
+        $item = $this->roomItemModel->findById($roomItemId);
+        if (!$item) {
             throw new \RuntimeException('Queue item not found.', 404);
+        }
+
+        if ($requesterRole === 'student' && (int)$item['student_id'] !== $userId) {
+            throw new \RuntimeException('Students can only comment on their own queue entry.', 403);
         }
 
         $id = $this->commentModel->create([
@@ -43,16 +48,14 @@ class CommentService
         $item          = $this->roomItemModel->findById($roomItemId);
         $itemStudentId = $item ? (int)$item['student_id'] : null;
 
-        if ($requesterRole === 'admin') {
+        if ($requesterRole === 'admin' || $requesterRole === 'teacher') {
             return $comments;
         }
 
+        // student: sees public comments + private comments on their own item only
         return array_values(array_filter($comments, function ($c) use ($requesterId, $itemStudentId) {
-            if ($c['visibility'] === 'public') {
-                return true;
-            }
-            // private: visible only to the comment author and the item's own student
-            return (int)$c['user_id'] === $requesterId || $requesterId === $itemStudentId;
+            if ($c['visibility'] === 'public') return true;
+            return $requesterId === $itemStudentId;
         }));
     }
 }

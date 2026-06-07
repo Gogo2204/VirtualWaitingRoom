@@ -18,7 +18,7 @@ class CommentController
         $visibility = trim($body['visibility'] ?? 'teacher_only');
 
         try {
-            $comment = $this->commentService->addComment($itemId, (int)$user['sub'], $content, $visibility);
+            $comment = $this->commentService->addComment($itemId, (int)$user['sub'], $user['role'], $content, $visibility);
             http_response_code(201);
             echo json_encode(['success' => true, 'comment' => $comment]);
         } catch (\InvalidArgumentException $e) {

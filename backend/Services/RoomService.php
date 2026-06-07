@@ -78,9 +78,10 @@ class RoomService
 
             $item['comments'] = array_values(array_filter(
                 $comments,
-                function ($c) use ($requesterId, $itemStudentId) {
+                function ($c) use ($isTeacher, $requesterId, $itemStudentId) {
                     if ($c['visibility'] === 'public') return true;
-                    return (int)$c['user_id'] === $requesterId || $requesterId === $itemStudentId;
+                    if ($isTeacher) return true;
+                    return $requesterId === $itemStudentId;
                 }
             ));
         }
