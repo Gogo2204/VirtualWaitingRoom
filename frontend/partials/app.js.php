@@ -8,13 +8,10 @@ function requireAuth(...roles) {
 }
 
 async function api(method, path, body = null) {
-    const opts = {
-        method,
-        headers: {
-            'Content-Type':  'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-    };
+    const headers = { 'Content-Type': 'application/json' };
+    const token   = localStorage.getItem('token');
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    const opts = { method, headers };
     if (body !== null) opts.body = JSON.stringify(body);
     const res  = await fetch(path, opts);
     const data = await res.json();

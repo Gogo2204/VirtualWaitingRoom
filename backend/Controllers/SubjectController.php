@@ -10,6 +10,7 @@ class SubjectController
 
     public function list(): void
     {
+        header('Content-Type: application/json');
         echo json_encode(['success' => true, 'subjects' => $this->subjectModel->getAll()]);
     }
 }

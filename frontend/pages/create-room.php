@@ -29,8 +29,8 @@ requireAuth('teacher');
         select.innerHTML = '';
         data.subjects.forEach(s => {
             const opt      = document.createElement('option');
-            opt.value      = s.id;
-            opt.textContent = s.type;
+            opt.value       = s.id;
+            opt.textContent = s.name || s.type;
             select.appendChild(opt);
         });
     } catch (err) {
@@ -41,7 +41,7 @@ requireAuth('teacher');
 async function createRoom() {
     const payload = {
         name:              document.getElementById('name').value.trim(),
-        subject_id:        parseInt(document.getElementById('subject_id').value),
+        subject_id:        parseInt(document.getElementById('subject_id').value) || null,
         description:       document.getElementById('description').value.trim(),
         wait_time_minutes: parseInt(document.getElementById('wait_time_minutes').value) || 15,
         url:               document.getElementById('url').value.trim(),
