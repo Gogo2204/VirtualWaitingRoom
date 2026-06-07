@@ -73,16 +73,16 @@ class RoomService
         $items = $this->roomModel->getQueue($roomId);
 
         foreach ($items as &$item) {
-            $comments = $this->commentModel->getForRoomItem((int)$item['id']);
+            $comments      = $this->commentModel->getForRoomItem((int)$item['id']);
+            $itemStudentId = (int)$item['student_id'];
 
-            if (!$isTeacher) {
-                $comments = array_values(array_filter(
-                    $comments,
-                    fn($c) => $c['visibility'] === 'public'
-                ));
-            }
-
-            $item['comments'] = $comments;
+            $item['comments'] = array_values(array_filter(
+                $comments,
+                function ($c) use ($requesterId, $itemStudentId) {
+                    if ($c['visibility'] === 'public') return true;
+                    return (int)$c['user_id'] === $requesterId || $requesterId === $itemStudentId;
+                }
+            ));
         }
         unset($item);
 

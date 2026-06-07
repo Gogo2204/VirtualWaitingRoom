@@ -34,7 +34,7 @@ class CommentController
     public function list(int $itemId): void
     {
         $user     = AuthMiddleware::user();
-        $comments = $this->commentService->getComments($itemId, $user['role']);
+        $comments = $this->commentService->getComments($itemId, (int)$user['sub'], $user['role']);
         echo json_encode(['success' => true, 'comments' => $comments]);
     }
 }
