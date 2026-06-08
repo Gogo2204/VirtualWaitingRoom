@@ -25,7 +25,11 @@ class JwtHelper
 
     public static function decode(string $token): array
     {
-        [$header, $body, $sig] = explode('.', $token) + [null, null, null];
+        $parts = explode('.', $token);
+        if (count($parts) !== 3) {
+            throw new \RuntimeException('Invalid token.', 401);
+        }
+        [$header, $body, $sig] = $parts;
 
         $expected = self::base64url(hash_hmac('sha256', "$header.$body", self::$secret, true));
 
