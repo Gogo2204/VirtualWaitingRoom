@@ -22,13 +22,6 @@
     --vwr-arch-text:    #8b1a1a;
 }
 
-/* ── Bootstrap override ─────────────────────────────────────────── */
-.btn-primary, .bg-primary { background-color: var(--vwr-primary) !important; border-color: var(--vwr-primary) !important; }
-.btn-primary:hover        { background-color: #0f449a !important; border-color: #0f449a !important; }
-.btn-outline-primary      { color: var(--vwr-primary) !important; border-color: var(--vwr-primary) !important; }
-.btn-outline-primary:hover{ background-color: var(--vwr-primary) !important; color: #fff !important; }
-a { color: var(--vwr-primary); }
-
 /* ── Global ─────────────────────────────────────────────────────── */
 body {
     background-color: var(--vwr-bg);

@@ -1,10 +1,11 @@
 <nav class="navbar navbar-expand-md site-nav navbar-dark">
     <div class="container-lg">
         <a class="navbar-brand fw-bold" href="/dashboard">VWR</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu" aria-label="Toggle navigation">
+        <button class="navbar-toggler" type="button" aria-label="Toggle navigation"
+            onclick="var m=document.getElementById('navMenu');m.classList.toggle('show')">
             <span class="navbar-toggler-icon"></span>
         </button>
-        <div class="collapse navbar-collapse" id="navMenu">
+        <div class="navbar-collapse" id="navMenu">
             <ul id="nav-links" class="navbar-nav ms-auto align-items-md-center gap-md-1"></ul>
         </div>
     </div>
