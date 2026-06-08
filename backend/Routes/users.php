@@ -24,6 +24,12 @@ match (true) {
         $controller->importStudents();
     })(),
     
+    $method === 'GET' && $path === '/api/users/students' => (function () {
+        AuthMiddleware::require('teacher');
+        $controller = new UserController(new UserService(new User(getDb())));
+        $controller->listStudents();
+    })(),
+
     $method === 'GET' && $path === '/api/users/profile' => (function () {
         AuthMiddleware::require('student', 'teacher', 'admin');
         $controller = new UserController(new UserService(new User(getDb())));

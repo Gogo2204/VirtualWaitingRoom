@@ -50,17 +50,16 @@
             </div>
         </div>
 
-        <!-- Student: rooms link -->
-        <div id="student-section" class="col-lg-5" style="display:none">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-                    <p class="page-section-title">Waiting Rooms</p>
-                    <p class="text-muted small mb-3">View and join your assigned waiting rooms.</p>
-                    <a href="/rooms" class="btn btn-sm btn-primary">Go to Rooms</a>
-                </div>
+    </div><!-- /.row -->
+
+    <!-- Teacher: imported students list -->
+    <div id="teacher-students-section" class="mt-4" style="display:none">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <p class="page-section-title">Imported Students</p>
+                <div id="students-list"><p class="text-muted small"><em>Loading…</em></p></div>
             </div>
         </div>
-
     </div>
 </div>
 
@@ -69,12 +68,41 @@
 <script>
 const user = requireAuth();
 
-if (user.role === 'admin') {
+if (user.role === 'student') {
+    window.location.replace('/rooms');
+} else if (user.role === 'admin') {
     document.getElementById('admin-section').style.display = 'block';
-} else if (user.role === 'teacher') {
-    document.getElementById('teacher-section').style.display = 'block';
 } else {
-    document.getElementById('student-section').style.display = 'block';
+    document.getElementById('teacher-section').style.display = 'block';
+    document.getElementById('teacher-students-section').style.display = 'block';
+    loadStudents();
+}
+
+async function loadStudents() {
+    const container = document.getElementById('students-list');
+    try {
+        const data = await api('GET', '/api/users/students');
+        if (!data.students.length) {
+            container.innerHTML = '<p class="text-muted small">No students imported yet.</p>';
+            return;
+        }
+        const rows = data.students.map(s => `<tr>
+            <td>${s.faculty_number ?? '—'}</td>
+            <td>${s.first_name} ${s.last_name}</td>
+            <td>${s.email}</td>
+            <td><span class="sb sb-${s.status}">${s.status}</span></td>
+        </tr>`).join('');
+        container.innerHTML = `<div class="table-responsive">
+            <table class="table table-sm table-hover align-middle">
+                <thead class="table-light">
+                    <tr><th>Faculty #</th><th>Name</th><th>Email</th><th>Status</th></tr>
+                </thead>
+                <tbody>${rows}</tbody>
+            </table>
+        </div>`;
+    } catch (err) {
+        container.innerHTML = `<p class="text-danger small">${err.message}</p>`;
+    }
 }
 
 async function addTeacher() {
@@ -206,6 +234,7 @@ async function importStudents() {
         importMsg.textContent = `Done — ${data.created} created, ${data.skipped} already existed.`;
         document.getElementById('preview').style.display = 'none';
         parsedStudents = [];
+        loadStudents();
     } catch (err) {
         importMsg.className = 'small mt-2 text-danger';
         importMsg.textContent = err.message;

@@ -67,6 +67,13 @@ class UserController
         }
     }
 
+    public function listStudents(): void
+    {
+        $teacherId = (int)AuthMiddleware::user()['sub'];
+        $students  = $this->userService->listStudents($teacherId);
+        echo json_encode(['success' => true, 'students' => $students]);
+    }
+
     public function importStudents(): void
     {
         $body = json_decode(file_get_contents('php://input'), true);

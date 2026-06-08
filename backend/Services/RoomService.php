@@ -97,10 +97,22 @@ class RoomService
             if ($item['status'] === 'done') {
                 $item['times'] = $times[(int)$item['id']] ?? ['queue_seconds' => 0, 'meeting_seconds' => 0];
             }
+            if ($item['status'] === 'invited_perm') {
+                $item['meeting_link'] = $room['url'] ?? '';
+            }
         }
         unset($item);
 
-        return $items;
+        return [
+            'room' => [
+                'id'          => (int)$room['id'],
+                'name'        => $room['name'],
+                'description' => $room['description'] ?? '',
+                'status'      => $room['status'],
+                'url'         => $room['url'] ?? '',
+            ],
+            'queue' => $items,
+        ];
     }
 
     public function joinQueue(int $roomId, int $studentId): array

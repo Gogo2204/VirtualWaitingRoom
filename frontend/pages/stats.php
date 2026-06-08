@@ -2,10 +2,7 @@
 <?php require_once __DIR__ . '/../partials/nav.php'; ?>
 
 <div class="container-lg py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="fw-bold mb-0">Statistics</h4>
-        <span id="refresh-info" class="refresh-info"></span>
-    </div>
+    <h4 class="fw-bold mb-4">Statistics</h4>
 
     <div id="msg" class="text-danger small mb-2"></div>
 
@@ -104,7 +101,6 @@ async function loadSubjectStats() {
         const data  = await api('GET', '/api/stats/subjects');
         subjectData = data.stats;
         renderSubjectTable();
-        document.getElementById('refresh-info').textContent = `Updated ${new Date().toLocaleTimeString()}`;
     } catch (err) { setMsg('msg', err.message); }
 }
 
@@ -136,15 +132,23 @@ async function loadRoomStats(roomId) {
     try {
         const data = await api('GET', `/api/stats/rooms/${roomId}`);
         renderRoomStats(data.stats);
-        document.getElementById('refresh-info').textContent = `Updated ${new Date().toLocaleTimeString()}`;
     } catch (err) { setMsg('msg', err.message); }
 }
 
 async function loadRoomStatsFromInput() {
-    const id = parseInt(document.getElementById('room-id-input').value);
+    const input = document.getElementById('room-id-input');
+    const id = parseInt(input.value);
     if (!id) return;
-    activeRoomId = id;
-    await loadRoomStats(id);
+    try {
+        const data = await api('GET', `/api/stats/rooms/${id}`);
+        activeRoomId = id;
+        renderRoomStats(data.stats);
+        setMsg('msg', '');
+    } catch (err) {
+        setMsg('msg', err.message);
+        input.value  = '';
+        activeRoomId = null;
+    }
 }
 
 async function loadRoomStatsFromSelect() {

@@ -98,6 +98,13 @@ class UserService
         return ['created' => $created, 'skipped' => $skipped];
     }
 
+    public function listStudents(int $teacherId): array
+    {
+        $students = $this->userModel->getStudents($teacherId);
+        foreach ($students as &$s) unset($s['password_hash']);
+        return $students;
+    }
+
     public function getProfile(int $userId): array
     {
         $user = $this->userModel->findById($userId);

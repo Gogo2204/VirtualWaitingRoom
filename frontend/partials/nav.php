@@ -26,12 +26,16 @@
         return;
     }
 
-    const adminLinks = user.role === 'admin'
-        ? li('/admin/users', 'Users')
-        : (user.role === 'teacher' ? li('/rooms', 'Rooms') + li('/stats', 'Statistics') : li('/rooms', 'Rooms'));
+    let roleLinks = '';
+    if (user.role === 'admin') {
+        roleLinks = li('/dashboard', 'Dashboard') + li('/admin/users', 'Users');
+    } else if (user.role === 'teacher') {
+        roleLinks = li('/dashboard', 'Dashboard') + li('/rooms', 'Rooms') + li('/stats', 'Statistics');
+    } else {
+        roleLinks = li('/rooms', 'Rooms');
+    }
 
-    ul.innerHTML = li('/dashboard', 'Dashboard')
-        + adminLinks
+    ul.innerHTML = roleLinks
         + li('/profile', 'Profile')
         + `<li class="nav-item ms-md-2">
                <button class="btn btn-sm btn-outline-light"

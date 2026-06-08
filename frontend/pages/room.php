@@ -1,42 +1,54 @@
-<?php $pageTitle = 'Room Queue'; require_once __DIR__ . '/../partials/head.php'; ?>
+<?php $pageTitle = 'Room'; require_once __DIR__ . '/../partials/head.php'; ?>
 <?php require_once __DIR__ . '/../partials/nav.php'; ?>
 
 <div class="container-lg py-4">
 
-    <!-- Header row -->
-    <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
-        <div>
-            <a href="/rooms" class="text-muted text-decoration-none small">← Rooms</a>
-            <h4 id="room-title" class="fw-bold mb-0 mt-1">Queue</h4>
-        </div>
-        <div id="teacher-controls" class="d-flex flex-wrap gap-2 align-items-center" style="display:none!important">
-            <div class="btn-group btn-group-sm">
-                <button onclick="setStatus('open')"     class="btn btn-outline-success">Open</button>
-                <button onclick="setStatus('closed')"   class="btn btn-outline-secondary">Close</button>
-                <button onclick="setStatus('archived')" class="btn btn-outline-danger">Archive</button>
+    <!-- Back -->
+    <a href="/rooms" class="btn btn-sm btn-outline-secondary mb-3">&larr; Rooms</a>
+
+    <!-- Room header: title, description, status + teacher controls -->
+    <div class="card border-0 shadow-sm mb-3">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start gap-2 flex-wrap">
+                <div>
+                    <h4 id="room-title" class="fw-bold mb-1"></h4>
+                    <p id="room-description" class="text-muted small mb-2"></p>
+                    <span id="room-status-badge" class="sb"></span>
+                </div>
+                <div id="teacher-controls" class="d-flex flex-wrap gap-2 align-items-center" style="display:none!important">
+                    <div class="btn-group btn-group-sm">
+                        <button onclick="setStatus('open')"     class="btn btn-outline-success">Open</button>
+                        <button onclick="setStatus('closed')"   class="btn btn-outline-secondary">Close</button>
+                        <button onclick="setStatus('archived')" class="btn btn-outline-danger">Archive</button>
+                    </div>
+                </div>
             </div>
-            <button onclick="loadQueue()" class="btn btn-sm btn-outline-primary">↻ Refresh</button>
         </div>
     </div>
 
     <div id="msg" class="small text-danger mb-2"></div>
 
-    <!-- Student join / leave -->
+    <!-- Student: join / leave / meeting banner -->
     <div id="student-controls" class="mb-3 d-flex gap-2" style="display:none!important">
         <button id="join-btn"  onclick="joinQueue()"  class="btn btn-sm btn-primary">Join Queue</button>
         <button id="leave-btn" onclick="leaveQueue()" class="btn btn-sm btn-outline-danger d-none">Leave Queue</button>
     </div>
 
-    <!-- Meeting link banner -->
-    <div id="meeting-banner" class="alert alert-primary d-none mb-3" role="alert">
-        <strong>You are in a meeting.</strong>
+    <div id="meeting-banner" class="alert alert-primary d-none mb-3">
+        <strong>You are invited to a meeting.</strong>
         <a id="meeting-href" href="#" target="_blank" class="alert-link ms-2"></a>
     </div>
 
-    <!-- Queue -->
-    <div class="d-flex justify-content-between align-items-center mb-2">
-        <span class="small text-muted fw-semibold">Queue</span>
+    <!-- Live stats bar -->
+    <div id="stats-bar" class="row g-3 mb-3" style="display:none">
+        <div class="col-auto"><span class="text-muted small">Waiting</span><br><strong id="stat-waiting">—</strong></div>
+        <div class="col-auto"><span class="text-muted small">In meeting</span><br><strong id="stat-meeting">—</strong></div>
+        <div class="col-auto"><span class="text-muted small">Served today</span><br><strong id="stat-served">—</strong></div>
+        <div class="col-auto"><span class="text-muted small">Avg queue time</span><br><strong id="stat-avg-queue">—</strong></div>
+        <div class="col-auto"><span class="text-muted small">Avg meeting time</span><br><strong id="stat-avg-meet">—</strong></div>
     </div>
+
+    <!-- Queue -->
     <div id="queue-container"><p class="text-muted small"><em>Loading…</em></p></div>
 </div>
 
@@ -52,6 +64,16 @@ const STATUS_LABEL = {
     invited_perm: 'In meeting',
     done:         'Done',
 };
+
+const ROOM_STATUS_LABEL = { open: 'Open', closed: 'Closed', archived: 'Archived' };
+
+function renderRoomHeader(room) {
+    document.getElementById('room-title').textContent       = room.name;
+    document.getElementById('room-description').textContent = room.description || '';
+    const badge = document.getElementById('room-status-badge');
+    badge.textContent = ROOM_STATUS_LABEL[room.status] ?? room.status;
+    badge.className   = `sb sb-${room.status}`;
+}
 
 function buildComments(comments) {
     if (!comments?.length) return '';
@@ -130,10 +152,10 @@ function renderQueue(queue) {
             : '';
 
         return `<tr class="row-${item.status}">
-            <td class="text-center fw-bold text-muted" style="width:3rem">${item.position}</td>
-            <td>${item.first_name} ${item.last_name}</td>
-            <td><span class="sb sb-${item.status}">${STATUS_LABEL[item.status] ?? item.status}</span>${statusExtra}</td>
-            <td>${eta}</td>
+            <td style="width:2.5rem;text-align:center" class="fw-bold text-muted">${item.position}</td>
+            <td style="width:14rem">${item.first_name} ${item.last_name}</td>
+            <td style="width:10rem"><span class="sb sb-${item.status}">${STATUS_LABEL[item.status] ?? item.status}</span>${statusExtra}</td>
+            <td style="width:6rem">${eta}</td>
             <td>${buildComments(item.comments)}${buildActions(item)}</td>
         </tr>`;
     }).join('');
@@ -142,7 +164,11 @@ function renderQueue(queue) {
         <table class="table table-hover queue-table align-middle mb-0">
             <thead class="table-light">
                 <tr>
-                    <th>#</th><th>Student</th><th>Status</th><th>ETA</th><th>Comments / Actions</th>
+                    <th style="width:2.5rem">#</th>
+                    <th style="width:14rem">Student</th>
+                    <th style="width:10rem">Status</th>
+                    <th style="width:6rem">ETA</th>
+                    <th>Comments</th>
                 </tr>
             </thead>
             <tbody>${rows}</tbody>
@@ -150,6 +176,15 @@ function renderQueue(queue) {
     </div>`;
 
     updateStudentControls(myItem);
+}
+
+function renderStats(s) {
+    document.getElementById('stat-waiting').textContent   = s.currently_waiting;
+    document.getElementById('stat-meeting').textContent   = s.currently_in_meeting;
+    document.getElementById('stat-served').textContent    = s.students_served;
+    document.getElementById('stat-avg-queue').textContent = fmtSeconds(s.avg_queue_seconds);
+    document.getElementById('stat-avg-meet').textContent  = fmtSeconds(s.avg_meeting_seconds);
+    document.getElementById('stats-bar').style.display    = 'flex';
 }
 
 function updateStudentControls(item) {
@@ -172,7 +207,6 @@ function updateStudentControls(item) {
 
 async function loadQueue() {
     try {
-        // Preserve comment inputs and visibility dropdowns before re-render
         const saved = {};
         document.querySelectorAll('[id^="cmt-"]').forEach(el => {
             const id = el.id.slice(4);
@@ -181,9 +215,9 @@ async function loadQueue() {
 
         const data = await api('GET', `/api/rooms/${roomId}/queue`);
         myItem = null;
+        renderRoomHeader(data.room);
         renderQueue(data.queue);
 
-        // Restore preserved state
         Object.entries(saved).forEach(([id, { text, vis }]) => {
             const cmtEl = document.getElementById(`cmt-${id}`);
             const visEl = document.getElementById(`vis-${id}`);
@@ -191,6 +225,13 @@ async function loadQueue() {
             if (visEl) visEl.value = vis;
         });
     } catch (err) { setMsg('msg', err.message); }
+}
+
+async function loadStats() {
+    try {
+        const data = await api('GET', `/api/stats/rooms/${roomId}`);
+        renderStats(data.stats);
+    } catch { /* stats are supplemental, fail silently */ }
 }
 
 async function joinQueue() {
@@ -206,8 +247,7 @@ async function leaveQueue() {
 
 async function invite(itemId, mode) {
     try {
-        const data = await api('POST', `/api/rooms/${roomId}/queue/${itemId}/invite`, { mode });
-        setMsg('msg', mode === 'perm' ? `Invited. Link: ${data.meeting_link || '—'}` : '', 'success');
+        await api('POST', `/api/rooms/${roomId}/queue/${itemId}/invite`, { mode });
         loadQueue();
     } catch (err) { setMsg('msg', err.message); }
 }
@@ -242,8 +282,11 @@ async function addComment(itemId) {
 }
 
 async function setStatus(status) {
-    try { await api('PATCH', `/api/rooms/${roomId}/status`, { status }); loadQueue(); }
-    catch (err) { setMsg('msg', err.message); }
+    try {
+        await api('PATCH', `/api/rooms/${roomId}/status`, { status });
+        document.getElementById('room-status-badge').textContent = { open: 'Open', closed: 'Closed', archived: 'Archived' }[status] ?? status;
+        document.getElementById('room-status-badge').className   = `sb sb-${status}`;
+    } catch (err) { setMsg('msg', err.message); }
 }
 
 (async () => {
@@ -253,7 +296,8 @@ async function setStatus(status) {
         document.getElementById('student-controls').style.cssText = 'display:flex!important';
     }
     await loadQueue();
-    setInterval(loadQueue, 5000);
+    loadStats();
+    setInterval(() => { loadQueue(); loadStats(); }, 5000);
 })();
 </script>
 

@@ -78,6 +78,8 @@ body {
 .sb-open          { background: var(--vwr-done-bg);    color: var(--vwr-open-text); }
 .sb-closed        { background: var(--vwr-waiting-bg); color: var(--vwr-closed-text); }
 .sb-archived      { background: #fde8e8;               color: var(--vwr-arch-text); }
+.sb-imported      { background: #e8f0fe;               color: #1a3a6b; }
+.sb-registered    { background: #e8f5e9;               color: #1a4a2a; }
 
 /* ── Queue table row tinting ────────────────────────────────────── */
 .queue-table tbody tr.row-invited_temp td { background-color: var(--vwr-temp-bg); }

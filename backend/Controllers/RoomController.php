@@ -42,8 +42,8 @@ class RoomController
         $user = AuthMiddleware::user();
 
         try {
-            $queue = $this->roomService->getQueue($roomId, (int)$user['sub']);
-            echo json_encode(['success' => true, 'queue' => $queue]);
+            $result = $this->roomService->getQueue($roomId, (int)$user['sub']);
+            echo json_encode(['success' => true, 'room' => $result['room'], 'queue' => $result['queue']]);
         } catch (\RuntimeException $e) {
             $code = (int)$e->getCode();
             http_response_code($code >= 400 && $code < 600 ? $code : 500);
