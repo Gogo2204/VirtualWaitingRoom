@@ -36,7 +36,6 @@
     <!-- Queue -->
     <div class="d-flex justify-content-between align-items-center mb-2">
         <span class="small text-muted fw-semibold">Queue</span>
-        <span id="refresh-info" class="refresh-info"></span>
     </div>
     <div id="queue-container"><p class="text-muted small"><em>Loading…</em></p></div>
 </div>
@@ -176,7 +175,6 @@ async function loadQueue() {
         const data = await api('GET', `/api/rooms/${roomId}/queue`);
         myItem = null;
         renderQueue(data.queue);
-        document.getElementById('refresh-info').textContent = `Updated ${new Date().toLocaleTimeString()}`;
     } catch (err) { setMsg('msg', err.message); }
 }
 

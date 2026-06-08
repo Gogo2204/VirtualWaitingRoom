@@ -27,7 +27,6 @@
         <div class="col"><p class="text-muted small"><em>Loading…</em></p></div>
     </div>
 
-    <p class="mt-3 mb-0"><span id="refresh-info" class="refresh-info"></span></p>
 </div>
 
 <?php require_once __DIR__ . '/../partials/app.js.php'; ?>
@@ -83,7 +82,6 @@ async function loadRooms() {
         const data = await api('GET', '/api/rooms');
         allRooms   = data.rooms;
         renderRooms();
-        document.getElementById('refresh-info').textContent = `Updated ${new Date().toLocaleTimeString()}`;
     } catch (err) {
         setMsg('msg', err.message);
     }
