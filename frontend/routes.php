@@ -5,7 +5,8 @@ $path   = rtrim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');
 
 match (true) {
     $method === 'GET' && $path === '' => (function () {
-        require_once __DIR__ . '/pages/home.php';
+        header('Location: /dashboard');
+        exit;
     })(),
 
     $method === 'GET' && $path === '/login' => (function () {
