@@ -37,6 +37,36 @@ class UserController
         }
     }
 
+    public function getProfile(): void
+    {
+        $user   = AuthMiddleware::user();
+        $result = $this->userService->getProfile((int)$user['sub']);
+        echo json_encode(['success' => true, 'user' => $result]);
+    }
+
+    public function updateProfile(): void
+    {
+        $user  = AuthMiddleware::user();
+        $body  = json_decode(file_get_contents('php://input'), true) ?? [];
+
+        try {
+            $result = $this->userService->updateProfile(
+                (int)$user['sub'],
+                trim($body['first_name'] ?? ''),
+                trim($body['last_name']  ?? ''),
+                trim($body['email']      ?? '')
+            );
+            echo json_encode(['success' => true, 'user' => $result]);
+        } catch (\InvalidArgumentException $e) {
+            http_response_code(422);
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        } catch (\RuntimeException $e) {
+            $code = (int)$e->getCode();
+            http_response_code($code >= 400 && $code < 600 ? $code : 500);
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+
     public function importStudents(): void
     {
         $body           = json_decode(file_get_contents('php://input'), true);

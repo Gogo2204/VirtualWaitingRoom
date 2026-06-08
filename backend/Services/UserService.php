@@ -84,6 +84,43 @@ class UserService
         return ['created' => $created, 'skipped' => $skipped];
     }
 
+    public function getProfile(int $userId): array
+    {
+        $user = $this->userModel->findById($userId);
+        if (!$user) {
+            throw new \RuntimeException('User not found.', 404);
+        }
+        unset($user['password_hash']);
+        return $user;
+    }
+
+    public function updateProfile(int $userId, string $firstName, string $lastName, string $email): array
+    {
+        if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            throw new \InvalidArgumentException('Invalid email address.');
+        }
+
+        if ($email !== '') {
+            $existing = $this->userModel->findByEmail($email);
+            if ($existing && (int)$existing['id'] !== $userId) {
+                throw new \InvalidArgumentException('Email already in use.');
+            }
+        }
+
+        $update = [];
+        if ($firstName !== '') $update['first_name'] = $firstName;
+        if ($lastName  !== '') $update['last_name']  = $lastName;
+        if ($email     !== '') $update['email']       = $email;
+
+        if (!empty($update)) {
+            $this->userModel->update($userId, $update);
+        }
+
+        $user = $this->userModel->findById($userId);
+        unset($user['password_hash']);
+        return $user;
+    }
+
     private function generateTempPassword(int $length = 12): string
     {
         $chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%';

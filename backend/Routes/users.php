@@ -24,6 +24,18 @@ match (true) {
         $controller->importStudents();
     })(),
     
+    $method === 'GET' && $path === '/api/users/profile' => (function () {
+        AuthMiddleware::require('student', 'teacher', 'admin');
+        $controller = new UserController(new UserService(new User(getDb())));
+        $controller->getProfile();
+    })(),
+
+    $method === 'PUT' && $path === '/api/users/profile' => (function () {
+        AuthMiddleware::require('student', 'teacher', 'admin');
+        $controller = new UserController(new UserService(new User(getDb())));
+        $controller->updateProfile();
+    })(),
+
     default => (function () {
       http_response_code(404);
       echo json_encode(['success' => false, 'message' => 'User route not found.']);

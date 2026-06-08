@@ -1,126 +1,164 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Statistics</title>
-</head>
-<body>
+<?php $pageTitle = 'Statistics'; require_once __DIR__ . '/../partials/head.php'; ?>
+<?php require_once __DIR__ . '/../partials/nav.php'; ?>
 
-<h2>Statistics</h2>
-<p><a href="/rooms">← Rooms</a></p>
-<p id="msg"></p>
+<div class="container-lg py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="fw-bold mb-0">Statistics</h4>
+        <span id="refresh-info" class="refresh-info"></span>
+    </div>
 
-<div id="teacher-section" style="display:none">
-    <h3>By Subject</h3>
-    <div id="subject-stats"><em>Loading…</em></div>
-</div>
+    <div id="msg" class="text-danger small mb-2"></div>
 
-<h3>Room Stats</h3>
-<div id="student-room-section" style="display:none">
-    <label>Select room: <select id="room-select"><option value="">—</option></select></label>
-    <button onclick="loadRoomStatsFromSelect()">Load</button>
+    <!-- Teacher: subject breakdown -->
+    <div id="teacher-section" style="display:none">
+        <p class="page-section-title">By Subject</p>
+        <div id="subject-stats"><p class="text-muted small"><em>Loading…</em></p></div>
+    </div>
+
+    <!-- Room stats -->
+    <div class="mt-4">
+        <p class="page-section-title">Room Statistics</p>
+
+        <div id="student-room-section" class="mb-3" style="display:none">
+            <label class="form-label small">Select room:</label>
+            <select id="room-select" class="form-select form-select-sm w-auto">
+                <option value="">— pick a room —</option>
+            </select>
+        </div>
+
+        <div id="teacher-room-section" class="mb-3 d-flex gap-2 align-items-end" style="display:none">
+            <div>
+                <label class="form-label small mb-1">Room ID:</label>
+                <input type="number" id="room-id-input" class="form-control form-control-sm" min="1" placeholder="e.g. 3" style="width:110px">
+            </div>
+            <button class="btn btn-sm btn-outline-primary" onclick="loadRoomStatsFromInput()">Load</button>
+        </div>
+
+        <div id="room-stats"><p class="text-muted small">Select a room to view its statistics.</p></div>
+    </div>
 </div>
-<div id="teacher-room-section" style="display:none">
-    <label>Room ID: <input type="number" id="room-id-input" min="1"></label>
-    <button onclick="loadRoomStatsFromInput()">Load</button>
-</div>
-<div id="room-stats"></div>
 
 <?php require_once __DIR__ . '/../partials/app.js.php'; ?>
 <script>
 const user = requireAuth('teacher', 'student', 'admin');
 let activeRoomId = null;
-let refreshTimer  = null;
-
-function fmtSeconds(s) {
-    if (s === null || s === undefined) return '—';
-    const m   = Math.floor(s / 60);
-    const sec = Math.round(s % 60);
-    return m > 0 ? `${m}m ${sec}s` : `${sec}s`;
-}
+let subjectData  = [];
+let sortCol = null, sortDir = 1;
 
 function fmtHour(h) {
     if (h === null || h === undefined) return '—';
     return `${String(h).padStart(2, '0')}:00`;
 }
 
+/* ── Subject table ─────────────────────────────────────── */
+function sortBy(col) {
+    sortDir = (sortCol === col) ? sortDir * -1 : 1;
+    sortCol = col;
+    renderSubjectTable();
+}
+
+function renderSubjectTable() {
+    const container = document.getElementById('subject-stats');
+    if (!subjectData.length) {
+        container.innerHTML = '<p class="text-muted small">No data yet.</p>';
+        return;
+    }
+
+    const sorted = [...subjectData].sort((a, b) => {
+        if (!sortCol) return 0;
+        const va = a[sortCol] ?? -1, vb = b[sortCol] ?? -1;
+        return (va > vb ? 1 : va < vb ? -1 : 0) * sortDir;
+    });
+
+    function th(label, col) {
+        const dir = sortCol === col ? (sortDir === 1 ? ' asc' : ' desc') : '';
+        return `<th data-sort="${col}" class="${dir}" onclick="sortBy('${col}')">${label}</th>`;
+    }
+
+    const rows = sorted.map(s => `<tr>
+        <td>${s.subject_type}</td>
+        <td class="text-center">${s.room_count}</td>
+        <td class="text-center">${s.students_served}</td>
+        <td class="text-center">${fmtSeconds(s.avg_queue_seconds)}</td>
+        <td class="text-center">${fmtSeconds(s.avg_meeting_seconds)}</td>
+    </tr>`).join('');
+
+    container.innerHTML = `<div class="table-responsive">
+        <table class="table table-sm table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    ${th('Subject', 'subject_type')}
+                    ${th('Rooms', 'room_count')}
+                    ${th('Served', 'students_served')}
+                    ${th('Avg Queue', 'avg_queue_seconds')}
+                    ${th('Avg Meeting', 'avg_meeting_seconds')}
+                </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+        </table>
+    </div>`;
+}
+
+async function loadSubjectStats() {
+    try {
+        const data  = await api('GET', '/api/stats/subjects');
+        subjectData = data.stats;
+        renderSubjectTable();
+        document.getElementById('refresh-info').textContent = `Updated ${new Date().toLocaleTimeString()}`;
+    } catch (err) { setMsg('msg', err.message); }
+}
+
+/* ── Room stats ────────────────────────────────────────── */
 function renderRoomStats(s) {
-    document.getElementById('room-stats').innerHTML = `<table border="1" cellpadding="4">
-        <tr><th>Currently Waiting</th><td>${s.currently_waiting}</td></tr>
-        <tr><th>Currently In Meeting</th><td>${s.currently_in_meeting}</td></tr>
-        <tr><th>Students Served (done)</th><td>${s.students_served}</td></tr>
-        <tr><th>Avg Queue Time</th><td>${fmtSeconds(s.avg_queue_seconds)}</td></tr>
-        <tr><th>Avg Meeting Time</th><td>${fmtSeconds(s.avg_meeting_seconds)}</td></tr>
-        <tr><th>Peak Hour</th><td>${fmtHour(s.peak_hour)}</td></tr>
-    </table>`;
+    function row(label, value, highlight = false) {
+        return `<tr><th scope="row" class="text-muted fw-normal">${label}</th>
+            <td class="${highlight ? 'fw-bold text-primary' : ''}">${value}</td></tr>`;
+    }
+
+    const waitCls = s.currently_waiting > 0;
+    const meetCls = s.currently_in_meeting > 0;
+
+    document.getElementById('room-stats').innerHTML = `<div class="table-responsive" style="max-width:400px">
+        <table class="table table-sm table-bordered align-middle mb-0">
+            <tbody>
+                ${row('Currently waiting',    s.currently_waiting,    waitCls)}
+                ${row('Currently in meeting', s.currently_in_meeting, meetCls)}
+                ${row('Students served',      s.students_served)}
+                ${row('Avg queue time',       fmtSeconds(s.avg_queue_seconds))}
+                ${row('Avg meeting time',     fmtSeconds(s.avg_meeting_seconds))}
+                ${row('Peak hour',            fmtHour(s.peak_hour))}
+            </tbody>
+        </table>
+    </div>`;
 }
 
 async function loadRoomStats(roomId) {
     try {
         const data = await api('GET', `/api/stats/rooms/${roomId}`);
         renderRoomStats(data.stats);
-    } catch (err) {
-        setMsg('msg', err.message);
-    }
-}
-
-function startAutoRefresh(roomId) {
-    if (refreshTimer) clearInterval(refreshTimer);
-    activeRoomId  = roomId;
-    refreshTimer  = setInterval(() => loadRoomStats(activeRoomId), 5000);
-}
-
-async function loadRoomStatsFromSelect() {
-    const roomId = parseInt(document.getElementById('room-select').value);
-    if (!roomId) return;
-    await loadRoomStats(roomId);
-    startAutoRefresh(roomId);
+        document.getElementById('refresh-info').textContent = `Updated ${new Date().toLocaleTimeString()}`;
+    } catch (err) { setMsg('msg', err.message); }
 }
 
 async function loadRoomStatsFromInput() {
-    const roomId = parseInt(document.getElementById('room-id-input').value);
-    if (!roomId) return;
-    await loadRoomStats(roomId);
-    startAutoRefresh(roomId);
+    const id = parseInt(document.getElementById('room-id-input').value);
+    if (!id) return;
+    activeRoomId = id;
+    await loadRoomStats(id);
 }
 
-async function loadSubjectStats() {
-    try {
-        const data      = await api('GET', '/api/stats/subjects');
-        const container = document.getElementById('subject-stats');
-        if (!data.stats.length) {
-            container.textContent = 'No data yet.';
-            return;
-        }
-        const table = document.createElement('table');
-        table.setAttribute('border', '1');
-        table.setAttribute('cellpadding', '4');
-        table.innerHTML = `<tr>
-            <th>Subject</th><th>Rooms</th><th>Students Served</th>
-            <th>Avg Queue Time</th><th>Avg Meeting Time</th>
-        </tr>`;
-        data.stats.forEach(s => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>${s.subject_type}</td>
-                <td>${s.room_count}</td>
-                <td>${s.students_served}</td>
-                <td>${fmtSeconds(s.avg_queue_seconds)}</td>
-                <td>${fmtSeconds(s.avg_meeting_seconds)}</td>
-            `;
-            table.appendChild(tr);
-        });
-        container.innerHTML = '';
-        container.appendChild(table);
-    } catch (err) {
-        setMsg('msg', err.message);
-    }
+async function loadRoomStatsFromSelect() {
+    const id = parseInt(document.getElementById('room-select').value);
+    if (!id) return;
+    activeRoomId = id;
+    await loadRoomStats(id);
 }
 
+/* ── Init ──────────────────────────────────────────────── */
 (async () => {
     if (user.role === 'teacher' || user.role === 'admin') {
-        document.getElementById('teacher-section').style.display   = 'block';
-        document.getElementById('teacher-room-section').style.display = 'block';
+        document.getElementById('teacher-section').style.display      = 'block';
+        document.getElementById('teacher-room-section').style.display = 'flex';
         loadSubjectStats();
         setInterval(loadSubjectStats, 5000);
     } else {
@@ -130,16 +168,16 @@ async function loadSubjectStats() {
             const select = document.getElementById('room-select');
             data.rooms.forEach(r => {
                 const opt = document.createElement('option');
-                opt.value       = r.id;
+                opt.value = r.id;
                 opt.textContent = `${r.name} (${r.subject_type})`;
                 select.appendChild(opt);
             });
-        } catch (err) {
-            setMsg('msg', err.message);
-        }
+            select.addEventListener('change', loadRoomStatsFromSelect);
+        } catch (err) { setMsg('msg', err.message); }
     }
+
+    setInterval(() => { if (activeRoomId) loadRoomStats(activeRoomId); }, 5000);
 })();
 </script>
 
-</body>
-</html>
+<?php require_once __DIR__ . '/../partials/foot.php'; ?>
