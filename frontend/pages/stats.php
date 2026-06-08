@@ -2,8 +2,6 @@
 <?php require_once __DIR__ . '/../partials/nav.php'; ?>
 
 <div class="container-lg py-4">
-    <h4 class="fw-bold mb-4">Statistics</h4>
-
     <div id="msg" class="text-danger small mb-2"></div>
 
     <!-- Teacher: subject breakdown -->

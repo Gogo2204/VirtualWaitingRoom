@@ -30,7 +30,7 @@ class RoomService
         }
 
         if ($subjectId <= 0 || !$this->subjectModel->findById($subjectId)) {
-            throw new \InvalidArgumentException('Invalid subject_id.');
+            throw new \InvalidArgumentException('Please select a valid purpose.');
         }
 
         $id = $this->roomModel->create([
@@ -270,6 +270,32 @@ class RoomService
         }
 
         $this->roomItemModel->setEta($roomItemId, $datetime);
+    }
+
+    public function inviteAllTemp(int $roomId): int
+    {
+        if (!$this->roomModel->findById($roomId)) {
+            throw new \RuntimeException('Room not found.', 404);
+        }
+        return $this->roomItemModel->updateStatusBulk($roomId, 'waiting', 'invited_temp');
+    }
+
+    public function returnAll(int $roomId): int
+    {
+        if (!$this->roomModel->findById($roomId)) {
+            throw new \RuntimeException('Room not found.', 404);
+        }
+        $count = $this->roomItemModel->updateStatusBulk($roomId, 'invited_temp', 'waiting');
+        if ($count > 0) $this->recalcEtas($roomId);
+        return $count;
+    }
+
+    public function setEtaAll(int $roomId, string $startDatetime): void
+    {
+        $room = $this->roomModel->findById($roomId);
+        if (!$room) throw new \RuntimeException('Room not found.', 404);
+        if (!strtotime($startDatetime)) throw new \InvalidArgumentException('Invalid start time.');
+        $this->roomItemModel->recalcEtasFromTime($roomId, (int)$room['wait_time_minutes'], $startDatetime);
     }
 
     public function recalcEtas(int $roomId): void

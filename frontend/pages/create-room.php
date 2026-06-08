@@ -12,7 +12,7 @@
         <div class="card-body">
             <div class="mb-3">
                 <label for="name" class="form-label">Room name <span class="text-danger">*</span></label>
-                <input type="text" id="name" class="form-control" placeholder="e.g. Monday Office Hours">
+                <input type="text" id="name" class="form-control">
             </div>
             <div class="mb-3">
                 <label for="subject_id" class="form-label">Purpose <span class="text-danger">*</span></label>
@@ -22,7 +22,7 @@
             </div>
             <div class="mb-3">
                 <label for="description" class="form-label">Description <span class="text-muted small">(optional)</span></label>
-                <textarea id="description" class="form-control" rows="2" placeholder="Short description visible to students"></textarea>
+                <textarea id="description" class="form-control" rows="2"></textarea>
             </div>
             <div class="mb-3">
                 <label for="wait_time_minutes" class="form-label">Wait time per student (minutes)</label>
@@ -30,7 +30,7 @@
             </div>
             <div class="mb-4">
                 <label for="url" class="form-label">Meeting URL <span class="text-muted small">(optional)</span></label>
-                <input type="url" id="url" class="form-control" placeholder="https://meet.example.com/…">
+                <input type="url" id="url" class="form-control">
             </div>
             <button onclick="createRoom()" class="btn btn-primary">Create Room</button>
             <div id="msg" class="small mt-2"></div>

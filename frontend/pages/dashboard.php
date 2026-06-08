@@ -2,8 +2,6 @@
 <?php require_once __DIR__ . '/../partials/nav.php'; ?>
 
 <div class="container-lg py-4">
-    <h4 class="fw-bold mb-4">Dashboard</h4>
-
     <div class="row g-4">
 
         <!-- Admin: create teacher -->

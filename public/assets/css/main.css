@@ -110,5 +110,20 @@ th[data-sort]::after   { content: ' ↕'; opacity: .35; font-size: .7em; }
 th[data-sort].asc::after  { content: ' ↑'; opacity: 1; }
 th[data-sort].desc::after { content: ' ↓'; opacity: 1; }
 
-/* ── Refresh indicator ──────────────────────────────────────────── */
-.refresh-info { font-size: .72rem; color: var(--vwr-muted); font-style: italic; }
+/* ── Flat cards ─────────────────────────────────────────────────── */
+.card {
+    border: 1px solid var(--vwr-border) !important;
+    border-radius: .375rem !important;
+    box-shadow: none !important;
+}
+
+/* ── Table improvements ─────────────────────────────────────────── */
+.table th,
+.table td { text-align: center; vertical-align: middle; }
+
+.table th + th,
+.table td + td { border-left: 1px solid var(--vwr-border); }
+
+/* First column stays left-aligned */
+.table th:first-child,
+.table td:first-child { text-align: left; }

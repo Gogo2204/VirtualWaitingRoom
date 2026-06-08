@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title><?= htmlspecialchars($pageTitle) ?> – VWR</title>
+    <title>Virtual Waiting Room</title>
     <link rel="stylesheet" href="/assets/css/framework.css">
     <link rel="stylesheet" href="/assets/css/main.css">
 </head>

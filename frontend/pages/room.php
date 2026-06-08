@@ -6,29 +6,42 @@
     <!-- Back -->
     <a href="/rooms" class="btn btn-sm btn-outline-secondary mb-3">&larr; Rooms</a>
 
-    <!-- Room header: title, description, status + teacher controls -->
-    <div class="card border-0 shadow-sm mb-3">
-        <div class="card-body">
-            <div class="d-flex justify-content-between align-items-start gap-2 flex-wrap">
-                <div>
-                    <h4 id="room-title" class="fw-bold mb-1"></h4>
-                    <p id="room-description" class="text-muted small mb-2"></p>
-                    <span id="room-status-badge" class="sb"></span>
-                </div>
-                <div id="teacher-controls" class="d-flex flex-wrap gap-2 align-items-center" style="display:none!important">
-                    <div class="btn-group btn-group-sm">
-                        <button onclick="setStatus('open')"     class="btn btn-outline-success">Open</button>
-                        <button onclick="setStatus('closed')"   class="btn btn-outline-secondary">Close</button>
-                        <button onclick="setStatus('archived')" class="btn btn-outline-danger">Archive</button>
-                    </div>
-                </div>
+    <!-- Room heading -->
+    <div class="mb-3">
+        <h2 id="room-title" class="fw-bold mb-1"></h2>
+        <p id="room-description" class="text-muted mb-2"></p>
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            <span id="room-status-badge" class="sb"></span>
+            <div id="teacher-controls" class="d-flex gap-1 flex-wrap" style="display:none!important">
+                <button onclick="setStatus('open')"     class="btn btn-sm btn-outline-success">Open</button>
+                <button onclick="setStatus('closed')"   class="btn btn-sm btn-outline-secondary">Close</button>
+                <button onclick="setStatus('archived')" class="btn btn-sm btn-outline-danger">Archive</button>
             </div>
         </div>
     </div>
 
     <div id="msg" class="small text-danger mb-2"></div>
 
-    <!-- Student: join / leave / meeting banner -->
+    <!-- Stats bar -->
+    <div id="stats-bar" class="d-flex flex-wrap gap-4 mb-3 p-3 rounded border" style="display:none!important;background:var(--vwr-surface)">
+        <div><div class="small text-muted">Waiting</div><strong id="stat-waiting">—</strong></div>
+        <div><div class="small text-muted">In meeting</div><strong id="stat-meeting">—</strong></div>
+        <div><div class="small text-muted">Served today</div><strong id="stat-served">—</strong></div>
+        <div><div class="small text-muted">Avg queue</div><strong id="stat-avg-queue">—</strong></div>
+        <div><div class="small text-muted">Avg meeting</div><strong id="stat-avg-meet">—</strong></div>
+    </div>
+
+    <!-- Teacher bulk actions -->
+    <div id="bulk-actions" class="d-flex flex-wrap gap-2 align-items-center mb-3" style="display:none!important">
+        <button onclick="inviteAllTemp()" class="btn btn-sm btn-outline-warning">Temp. invite all</button>
+        <button onclick="returnAll()"     class="btn btn-sm btn-outline-secondary">Return all</button>
+        <div class="d-flex gap-1 align-items-center">
+            <input type="time" id="eta-all-input" class="form-control form-control-sm" style="width:110px">
+            <button onclick="setEtaAll()" class="btn btn-sm btn-outline-primary">Set ETA for all</button>
+        </div>
+    </div>
+
+    <!-- Student controls -->
     <div id="student-controls" class="mb-3 d-flex gap-2" style="display:none!important">
         <button id="join-btn"  onclick="joinQueue()"  class="btn btn-sm btn-primary">Join Queue</button>
         <button id="leave-btn" onclick="leaveQueue()" class="btn btn-sm btn-outline-danger d-none">Leave Queue</button>
@@ -37,15 +50,6 @@
     <div id="meeting-banner" class="alert alert-primary d-none mb-3">
         <strong>You are invited to a meeting.</strong>
         <a id="meeting-href" href="#" target="_blank" class="alert-link ms-2"></a>
-    </div>
-
-    <!-- Live stats bar -->
-    <div id="stats-bar" class="row g-3 mb-3" style="display:none">
-        <div class="col-auto"><span class="text-muted small">Waiting</span><br><strong id="stat-waiting">—</strong></div>
-        <div class="col-auto"><span class="text-muted small">In meeting</span><br><strong id="stat-meeting">—</strong></div>
-        <div class="col-auto"><span class="text-muted small">Served today</span><br><strong id="stat-served">—</strong></div>
-        <div class="col-auto"><span class="text-muted small">Avg queue time</span><br><strong id="stat-avg-queue">—</strong></div>
-        <div class="col-auto"><span class="text-muted small">Avg meeting time</span><br><strong id="stat-avg-meet">—</strong></div>
     </div>
 
     <!-- Queue -->
@@ -57,15 +61,30 @@
 const roomId = <?= (int)$roomId ?>;
 const user   = requireAuth();
 let   myItem = null;
+const today  = new Date().toISOString().slice(0, 10);
 
 const STATUS_LABEL = {
     waiting:      'Waiting',
-    invited_temp: 'Temp invited',
+    invited_temp: 'Temp. invited',
     invited_perm: 'In meeting',
     done:         'Done',
 };
 
 const ROOM_STATUS_LABEL = { open: 'Open', closed: 'Closed', archived: 'Archived' };
+
+function sortQueue(queue) {
+    const order = { waiting: 0, invited_temp: 1, invited_perm: 2, done: 3 };
+    return [...queue].sort((a, b) => {
+        const ao = order[a.status] ?? 4, bo = order[b.status] ?? 4;
+        if (ao !== bo) return ao - bo;
+        if (a.status === 'waiting') {
+            if (a.eta && b.eta) return new Date(a.eta) - new Date(b.eta);
+            if (a.eta) return -1;
+            if (b.eta) return 1;
+        }
+        return a.position - b.position;
+    });
+}
 
 function renderRoomHeader(room) {
     document.getElementById('room-title').textContent       = room.name;
@@ -81,7 +100,7 @@ function buildComments(comments) {
         + comments.map(c => {
             const priv = c.visibility === 'teacher_only';
             return `<div class="comment-item${priv ? ' private' : ''}">
-                <strong>${c.first_name} ${c.last_name}</strong>${priv ? ' <span class="badge text-bg-primary" style="font-size:.6rem">private</span>' : ''}: ${c.content}
+                <strong>${c.first_name} ${c.last_name}</strong>${priv ? ' <span class="sb sb-imported" style="font-size:.55rem;vertical-align:middle">private</span>' : ''}: ${c.content}
             </div>`;
         }).join('')
         + '</div>';
@@ -92,10 +111,14 @@ function buildActions(item) {
 
     if (user.role === 'teacher') {
         if (item.status === 'waiting') {
-            html += `<button class="btn btn-sm btn-outline-primary me-1" onclick="invite(${item.id},'temp')">Temp</button>`;
-            html += `<button class="btn btn-sm btn-primary me-1" onclick="invite(${item.id},'perm')">Invite</button>`;
-            html += `<input type="datetime-local" id="slot-${item.id}" class="form-control form-control-sm d-inline-block w-auto me-1">`;
-            html += `<button class="btn btn-sm btn-outline-secondary" onclick="setSlot(${item.id})">Set slot</button>`;
+            html += `<button class="btn btn-sm btn-outline-warning me-1" onclick="invite(${item.id},'temp')">Temp. invite</button>`;
+            html += `<button class="btn btn-sm btn-primary me-1" onclick="invite(${item.id},'perm')">Invite to meeting</button>`;
+            html += `<button class="btn btn-sm btn-outline-secondary me-1" onclick="toggleSlot(${item.id})">Set slot</button>`;
+            html += `<span id="slot-wrap-${item.id}" class="d-inline-flex gap-1 align-items-center" style="display:none!important">
+                <input type="date" id="slot-date-${item.id}" class="form-control form-control-sm" value="${today}" style="width:140px">
+                <input type="time" id="slot-time-${item.id}" class="form-control form-control-sm" style="width:90px">
+                <button class="btn btn-sm btn-outline-primary" onclick="setSlot(${item.id})">✓</button>
+            </span>`;
         }
         if (item.status === 'invited_temp')
             html += `<button class="btn btn-sm btn-warning" onclick="studentReturn(${item.id})">Mark returned</button>`;
@@ -133,6 +156,7 @@ function buildActions(item) {
 
 function renderQueue(queue) {
     const container = document.getElementById('queue-container');
+    myItem = null;
 
     if (!queue.length) {
         container.innerHTML = '<p class="text-muted small">Queue is empty.</p>';
@@ -140,23 +164,25 @@ function renderQueue(queue) {
         return;
     }
 
-    const rows = queue.map(item => {
+    const sorted = sortQueue(queue);
+
+    const rows = sorted.map((item, idx) => {
         if (String(item.student_id) === String(user.id)) myItem = item;
 
         let statusExtra = '';
         if (item.status === 'done' && item.times)
-            statusExtra = `<br><small class="text-muted">Queue: ${fmtSeconds(item.times.queue_seconds)} · Meeting: ${fmtSeconds(item.times.meeting_seconds)}</small>`;
+            statusExtra = `<br><small class="text-muted">Queue: ${fmtSeconds(item.times.queue_seconds)} · Meet: ${fmtSeconds(item.times.meeting_seconds)}</small>`;
 
         const eta = (item.eta && item.status === 'waiting')
             ? `<small>${new Date(item.eta).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</small>`
             : '';
 
         return `<tr class="row-${item.status}">
-            <td style="width:2.5rem;text-align:center" class="fw-bold text-muted">${item.position}</td>
-            <td style="width:14rem">${item.first_name} ${item.last_name}</td>
+            <td style="width:2.5rem">${idx + 1}</td>
+            <td style="width:14rem;text-align:left">${item.first_name} ${item.last_name}</td>
             <td style="width:10rem"><span class="sb sb-${item.status}">${STATUS_LABEL[item.status] ?? item.status}</span>${statusExtra}</td>
             <td style="width:6rem">${eta}</td>
-            <td>${buildComments(item.comments)}${buildActions(item)}</td>
+            <td style="text-align:left">${buildComments(item.comments)}${buildActions(item)}</td>
         </tr>`;
     }).join('');
 
@@ -184,7 +210,7 @@ function renderStats(s) {
     document.getElementById('stat-served').textContent    = s.students_served;
     document.getElementById('stat-avg-queue').textContent = fmtSeconds(s.avg_queue_seconds);
     document.getElementById('stat-avg-meet').textContent  = fmtSeconds(s.avg_meeting_seconds);
-    document.getElementById('stats-bar').style.display    = 'flex';
+    document.getElementById('stats-bar').style.cssText    = 'display:flex!important';
 }
 
 function updateStudentControls(item) {
@@ -207,6 +233,12 @@ function updateStudentControls(item) {
 
 async function loadQueue() {
     try {
+        // Save focused element + selection
+        const focusedId = document.activeElement?.id || null;
+        const selStart  = document.activeElement?.selectionStart ?? null;
+        const selEnd    = document.activeElement?.selectionEnd   ?? null;
+
+        // Save comment inputs
         const saved = {};
         document.querySelectorAll('[id^="cmt-"]').forEach(el => {
             const id = el.id.slice(4);
@@ -214,16 +246,27 @@ async function loadQueue() {
         });
 
         const data = await api('GET', `/api/rooms/${roomId}/queue`);
-        myItem = null;
         renderRoomHeader(data.room);
         renderQueue(data.queue);
 
+        // Restore comment inputs
         Object.entries(saved).forEach(([id, { text, vis }]) => {
             const cmtEl = document.getElementById(`cmt-${id}`);
             const visEl = document.getElementById(`vis-${id}`);
             if (cmtEl && text) cmtEl.value = text;
             if (visEl) visEl.value = vis;
         });
+
+        // Restore focus + selection
+        if (focusedId) {
+            const el = document.getElementById(focusedId);
+            if (el) {
+                el.focus();
+                if (selStart !== null && el.setSelectionRange) {
+                    try { el.setSelectionRange(selStart, selEnd); } catch {}
+                }
+            }
+        }
     } catch (err) { setMsg('msg', err.message); }
 }
 
@@ -231,25 +274,59 @@ async function loadStats() {
     try {
         const data = await api('GET', `/api/stats/rooms/${roomId}`);
         renderStats(data.stats);
-    } catch { /* stats are supplemental, fail silently */ }
+    } catch { /* supplemental */ }
+}
+
+function toggleSlot(itemId) {
+    const w = document.getElementById(`slot-wrap-${itemId}`);
+    if (!w) return;
+    const hidden = w.style.cssText.includes('none');
+    w.style.cssText = hidden ? 'display:inline-flex!important' : 'display:none!important';
+}
+
+async function setSlot(itemId) {
+    const date = document.getElementById(`slot-date-${itemId}`)?.value;
+    const time = document.getElementById(`slot-time-${itemId}`)?.value;
+    if (!date || !time) return;
+    try {
+        await api('POST', `/api/rooms/${roomId}/queue/${itemId}/slot`, { datetime: `${date}T${time}` });
+        loadQueue();
+    } catch (err) { setMsg('msg', err.message); }
+}
+
+async function setEtaAll() {
+    const time = document.getElementById('eta-all-input')?.value;
+    if (!time) return;
+    try {
+        await api('POST', `/api/rooms/${roomId}/queue/set-eta-all`, { start_datetime: `${today}T${time}` });
+        loadQueue();
+    } catch (err) { setMsg('msg', err.message); }
+}
+
+async function inviteAllTemp() {
+    try { await api('POST', `/api/rooms/${roomId}/queue/invite-all-temp`); loadQueue(); loadStats(); }
+    catch (err) { setMsg('msg', err.message); }
+}
+
+async function returnAll() {
+    try { await api('POST', `/api/rooms/${roomId}/queue/return-all`); loadQueue(); loadStats(); }
+    catch (err) { setMsg('msg', err.message); }
 }
 
 async function joinQueue() {
-    try { await api('POST', `/api/rooms/${roomId}/queue`); loadQueue(); }
+    try { await api('POST', `/api/rooms/${roomId}/queue`); loadQueue(); loadStats(); }
     catch (err) { setMsg('msg', err.message); }
 }
 
 async function leaveQueue() {
     if (!myItem) return;
-    try { await api('DELETE', `/api/rooms/${roomId}/queue`, { room_item_id: myItem.id }); loadQueue(); }
+    try { await api('DELETE', `/api/rooms/${roomId}/queue`, { room_item_id: myItem.id }); loadQueue(); loadStats(); }
     catch (err) { setMsg('msg', err.message); }
 }
 
 async function invite(itemId, mode) {
-    try {
-        await api('POST', `/api/rooms/${roomId}/queue/${itemId}/invite`, { mode });
-        loadQueue();
-    } catch (err) { setMsg('msg', err.message); }
+    try { await api('POST', `/api/rooms/${roomId}/queue/${itemId}/invite`, { mode }); loadQueue(); loadStats(); }
+    catch (err) { setMsg('msg', err.message); }
 }
 
 async function finishMeeting(itemId) {
@@ -257,19 +334,12 @@ async function finishMeeting(itemId) {
         const data = await api('POST', `/api/rooms/${roomId}/queue/${itemId}/finish`);
         const t    = data.times ?? {};
         setMsg('msg', `Done — Queue: ${fmtSeconds(t.queue_seconds)}, Meeting: ${fmtSeconds(t.meeting_seconds)}`, 'success');
-        loadQueue();
+        loadQueue(); loadStats();
     } catch (err) { setMsg('msg', err.message); }
 }
 
 async function studentReturn(itemId) {
-    try { await api('POST', `/api/rooms/${roomId}/queue/${itemId}/return`); loadQueue(); }
-    catch (err) { setMsg('msg', err.message); }
-}
-
-async function setSlot(itemId) {
-    const val = document.getElementById(`slot-${itemId}`)?.value;
-    if (!val) return;
-    try { await api('POST', `/api/rooms/${roomId}/queue/${itemId}/slot`, { datetime: val }); loadQueue(); }
+    try { await api('POST', `/api/rooms/${roomId}/queue/${itemId}/return`); loadQueue(); loadStats(); }
     catch (err) { setMsg('msg', err.message); }
 }
 
@@ -284,14 +354,16 @@ async function addComment(itemId) {
 async function setStatus(status) {
     try {
         await api('PATCH', `/api/rooms/${roomId}/status`, { status });
-        document.getElementById('room-status-badge').textContent = { open: 'Open', closed: 'Closed', archived: 'Archived' }[status] ?? status;
-        document.getElementById('room-status-badge').className   = `sb sb-${status}`;
+        const badge = document.getElementById('room-status-badge');
+        badge.textContent = ROOM_STATUS_LABEL[status] ?? status;
+        badge.className   = `sb sb-${status}`;
     } catch (err) { setMsg('msg', err.message); }
 }
 
 (async () => {
     if (user.role === 'teacher' || user.role === 'admin') {
         document.getElementById('teacher-controls').style.cssText = 'display:flex!important';
+        document.getElementById('bulk-actions').style.cssText     = 'display:flex!important';
     } else {
         document.getElementById('student-controls').style.cssText = 'display:flex!important';
     }

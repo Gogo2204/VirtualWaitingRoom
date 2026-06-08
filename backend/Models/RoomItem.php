@@ -126,6 +126,35 @@ class RoomItem extends Model
         return $counts;
     }
 
+    public function updateStatusBulk(int $roomId, string $fromStatus, string $toStatus): int
+    {
+        $stmt = $this->db->prepare("
+            UPDATE room_items SET status = ? WHERE room_id = ? AND status = ?
+        ");
+        $stmt->execute([$toStatus, $roomId, $fromStatus]);
+        return $stmt->rowCount();
+    }
+
+    public function getWaiting(int $roomId): array
+    {
+        $stmt = $this->db->prepare("
+            SELECT id, position FROM room_items WHERE room_id = ? AND status = 'waiting' ORDER BY position ASC
+        ");
+        $stmt->execute([$roomId]);
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    public function recalcEtasFromTime(int $roomId, int $waitTimeMinutes, string $startDatetime): void
+    {
+        $rows   = $this->getWaiting($roomId);
+        $update = $this->db->prepare("UPDATE room_items SET eta = ? WHERE id = ?");
+        $baseTs = strtotime($startDatetime);
+        foreach ($rows as $i => $row) {
+            $eta = date('Y-m-d H:i:s', $baseTs + ($i * $waitTimeMinutes * 60));
+            $update->execute([$eta, $row['id']]);
+        }
+    }
+
     public function recalcEtas(int $roomId, int $waitTimeMinutes): void
     {
         $stmt = $this->db->prepare("

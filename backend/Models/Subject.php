@@ -30,4 +30,11 @@ class Subject extends Model
         $stmt = $this->db->query("SELECT * FROM subjects ORDER BY type ASC");
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
+
+    public function isInUse(int $id): bool
+    {
+        $stmt = $this->db->prepare("SELECT COUNT(*) FROM rooms WHERE subject_id = ?");
+        $stmt->execute([$id]);
+        return (int)$stmt->fetchColumn() > 0;
+    }
 }

@@ -159,6 +159,47 @@ class RoomController
         }
     }
 
+    public function inviteAllTemp(int $roomId): void
+    {
+        try {
+            $count = $this->roomService->inviteAllTemp($roomId);
+            echo json_encode(['success' => true, 'count' => $count]);
+        } catch (\RuntimeException $e) {
+            $code = (int)$e->getCode();
+            http_response_code($code >= 400 && $code < 600 ? $code : 500);
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+
+    public function returnAll(int $roomId): void
+    {
+        try {
+            $count = $this->roomService->returnAll($roomId);
+            echo json_encode(['success' => true, 'count' => $count]);
+        } catch (\RuntimeException $e) {
+            $code = (int)$e->getCode();
+            http_response_code($code >= 400 && $code < 600 ? $code : 500);
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+
+    public function setEtaAll(int $roomId): void
+    {
+        $body = json_decode(file_get_contents('php://input'), true) ?? [];
+        $startDatetime = trim($body['start_datetime'] ?? '');
+        try {
+            $this->roomService->setEtaAll($roomId, $startDatetime);
+            echo json_encode(['success' => true]);
+        } catch (\InvalidArgumentException $e) {
+            http_response_code(422);
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        } catch (\RuntimeException $e) {
+            $code = (int)$e->getCode();
+            http_response_code($code >= 400 && $code < 600 ? $code : 500);
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+
     public function finishMeeting(int $itemId): void
     {
         try {

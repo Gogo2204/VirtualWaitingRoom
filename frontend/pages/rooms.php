@@ -2,8 +2,7 @@
 <?php require_once __DIR__ . '/../partials/nav.php'; ?>
 
 <div class="container-lg py-4">
-    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-        <h4 class="fw-bold mb-0">Rooms</h4>
+    <div class="d-flex flex-wrap justify-content-end align-items-center gap-2 mb-3">
         <div class="d-flex flex-wrap gap-2 align-items-center">
             <div class="btn-group btn-group-sm" id="filter-bar">
                 <button class="btn btn-outline-secondary active" data-filter="all">All</button>

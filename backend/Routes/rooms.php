@@ -37,6 +37,7 @@ function makeRoomController(): RoomController
 $segments  = explode('/', ltrim($path, '/'));
 $roomId    = isset($segments[2]) && is_numeric($segments[2]) ? (int)$segments[2] : null;
 $segment3  = $segments[3] ?? null;
+$segment4  = $segments[4] ?? null;
 $itemId    = isset($segments[4]) && is_numeric($segments[4]) && (int)$segments[4] > 0 ? (int)$segments[4] : null;
 $segment5  = $segments[5] ?? null;
 
@@ -67,7 +68,22 @@ match (true) {
         makeRoomController()->getQueue($roomId);
     })(),
 
-    $method === 'POST' && $roomId !== null && $segment3 === 'queue' && $itemId === null => (function () use ($roomId) {
+    $method === 'POST' && $roomId !== null && $segment3 === 'queue' && $segment4 === 'invite-all-temp' => (function () use ($roomId) {
+        AuthMiddleware::require('teacher');
+        makeRoomController()->inviteAllTemp($roomId);
+    })(),
+
+    $method === 'POST' && $roomId !== null && $segment3 === 'queue' && $segment4 === 'return-all' => (function () use ($roomId) {
+        AuthMiddleware::require('teacher');
+        makeRoomController()->returnAll($roomId);
+    })(),
+
+    $method === 'POST' && $roomId !== null && $segment3 === 'queue' && $segment4 === 'set-eta-all' => (function () use ($roomId) {
+        AuthMiddleware::require('teacher');
+        makeRoomController()->setEtaAll($roomId);
+    })(),
+
+    $method === 'POST' && $roomId !== null && $segment3 === 'queue' && $itemId === null && $segment4 === null => (function () use ($roomId) {
         AuthMiddleware::require('student');
         makeRoomController()->joinQueue($roomId);
     })(),

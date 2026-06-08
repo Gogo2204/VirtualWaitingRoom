@@ -29,6 +29,23 @@ class Comment extends Model
         return (int)$this->db->lastInsertId();
     }
 
+    public function getAll(int $limit = 100): array
+    {
+        $stmt = $this->db->prepare("
+            SELECT c.id, c.content, c.visibility, c.created_at,
+                   u.first_name, u.last_name,
+                   r.id AS room_id, r.name AS room_name
+            FROM comments c
+            JOIN users u ON u.id = c.user_id
+            JOIN room_items ri ON ri.id = c.room_item_id
+            JOIN rooms r ON r.id = ri.room_id
+            ORDER BY c.created_at DESC
+            LIMIT ?
+        ");
+        $stmt->execute([$limit]);
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
     public function getForRoomItem(int $roomItemId): array
     {
         $stmt = $this->db->prepare("
