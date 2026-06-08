@@ -2,6 +2,9 @@ Options -Indexes
 
 RewriteEngine On
 
+# Pass Authorization header to PHP (Apache strips it by default)
+RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
 # Serve existing files and directories (CSS, JS, images) directly
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
