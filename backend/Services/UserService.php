@@ -45,28 +45,42 @@ class UserService
         return $user;
     }
 
-    public function importStudents(array $facultyNumbers, int $teacherId): array
+    public function importStudents(array $students, int $teacherId): array
     {
         $created = 0;
         $skipped = 0;
-    
-        foreach ($facultyNumbers as $fn) {
-            $fn = trim((string)$fn);
-            if (empty($fn)) continue;
-    
+
+        foreach ($students as $entry) {
+            if (is_string($entry)) {
+                $entry = ['faculty_number' => $entry, 'first_name' => '', 'last_name' => ''];
+            }
+
+            $fn        = trim((string)($entry['faculty_number'] ?? ''));
+            $firstName = trim((string)($entry['first_name']     ?? ''));
+            $lastName  = trim((string)($entry['last_name']      ?? ''));
+
+            if ($fn === '') continue;
+
             $existing = $this->userModel->findByFacultyNumber($fn);
 
             if ($existing) {
                 if ($this->teacherStudentModel !== null) {
                     $this->teacherStudentModel->importBatch($teacherId, [(int)$existing['id']]);
                 }
+                // Backfill name if the account is still a stub
+                if ($existing['status'] === 'imported') {
+                    $update = [];
+                    if ($firstName !== '' && ($existing['first_name'] ?? '') === '') $update['first_name'] = $firstName;
+                    if ($lastName  !== '' && ($existing['last_name']  ?? '') === '') $update['last_name']  = $lastName;
+                    if (!empty($update)) $this->userModel->update((int)$existing['id'], $update);
+                }
                 $skipped++;
                 continue;
             }
-    
+
             $studentId = $this->userModel->create([
-                'first_name'     => '',
-                'last_name'      => '',
+                'first_name'     => $firstName,
+                'last_name'      => $lastName,
                 'email'          => "student_{$fn}@placeholder.local",
                 'password_hash'  => '',
                 'faculty_number' => $fn,
@@ -80,7 +94,7 @@ class UserService
 
             $created++;
         }
-    
+
         return ['created' => $created, 'skipped' => $skipped];
     }
 

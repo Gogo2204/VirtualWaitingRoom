@@ -2,10 +2,7 @@
 <?php require_once __DIR__ . '/../partials/nav.php'; ?>
 
 <div class="container-lg py-4">
-    <div class="mb-4">
-        <h4 class="fw-bold mb-1">Dashboard</h4>
-        <p id="welcome" class="text-muted small mb-0"></p>
-    </div>
+    <h4 class="fw-bold mb-4">Dashboard</h4>
 
     <div class="row g-4">
 
@@ -34,7 +31,7 @@
             </div>
         </div>
 
-        <!-- Teacher / Admin: import students -->
+        <!-- Teacher: import students -->
         <div id="teacher-section" class="col-lg-7" style="display:none">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-body">
@@ -44,11 +41,22 @@
                         <input type="file" id="import-file" class="form-control form-control-sm" accept=".csv,.xlsx,.xls,.txt">
                     </div>
                     <div id="preview" style="display:none">
-                        <p class="small text-muted mb-1">Found <strong id="fn-count">0</strong> faculty numbers:</p>
+                        <p class="small text-muted mb-1">Found <strong id="fn-count">0</strong> students:</p>
                         <textarea id="fn-preview" rows="4" class="form-control form-control-sm mb-2" readonly></textarea>
                         <button onclick="importStudents()" class="btn btn-sm btn-primary">Import</button>
                     </div>
                     <div id="import-msg" class="small mt-2"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Student: rooms link -->
+        <div id="student-section" class="col-lg-5" style="display:none">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <p class="page-section-title">Waiting Rooms</p>
+                    <p class="text-muted small mb-3">View and join your assigned waiting rooms.</p>
+                    <a href="/rooms" class="btn btn-sm btn-primary">Go to Rooms</a>
                 </div>
             </div>
         </div>
@@ -60,14 +68,13 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 const user = requireAuth();
-document.getElementById('welcome').textContent =
-    `Signed in as ${user.first_name ? user.first_name + ' ' + user.last_name : user.email} · ${user.role}`;
 
 if (user.role === 'admin') {
     document.getElementById('admin-section').style.display = 'block';
-}
-if (user.role === 'admin' || user.role === 'teacher') {
+} else if (user.role === 'teacher') {
     document.getElementById('teacher-section').style.display = 'block';
+} else {
+    document.getElementById('student-section').style.display = 'block';
 }
 
 async function addTeacher() {
@@ -89,9 +96,9 @@ async function addTeacher() {
     }
 }
 
-let parsedFacultyNumbers = [];
+let parsedStudents = [];
 
-document.getElementById('import-file').addEventListener('change', function (e) {
+document.getElementById('import-file')?.addEventListener('change', function (e) {
     const file = e.target.files[0];
     if (!file) return;
     const ext = file.name.split('.').pop().toLowerCase();
@@ -99,14 +106,64 @@ document.getElementById('import-file').addEventListener('change', function (e) {
     else parseCsv(file);
 });
 
+function isFacultyNumber(v) {
+    return /^[a-zA-Z0-9]+$/.test(v);
+}
+
+function normalizeHeader(h) {
+    return String(h).toLowerCase().trim().replace(/[\s_-]+/g, '_');
+}
+
+function detectColumns(headers) {
+    const fnAliases   = ['faculty_number', 'facultynumber', 'fn', 'faculty_no', 'student_id'];
+    const firstAliases = ['first_name', 'firstname', 'first'];
+    const lastAliases  = ['last_name', 'lastname', 'last'];
+
+    const norm = headers.map(normalizeHeader);
+    const fnIdx    = norm.findIndex(h => fnAliases.includes(h));
+    const firstIdx = norm.findIndex(h => firstAliases.includes(h));
+    const lastIdx  = norm.findIndex(h => lastAliases.includes(h));
+    return { fnIdx, firstIdx, lastIdx };
+}
+
+function buildStudentObjects(rows) {
+    if (!rows.length) return [];
+
+    const firstRow = rows[0].map(v => String(v ?? '').trim());
+    const { fnIdx, firstIdx, lastIdx } = detectColumns(firstRow);
+
+    // If header row detected (has a recognizable faculty number column)
+    if (fnIdx !== -1) {
+        const dataRows = rows.slice(1);
+        const seen = new Set();
+        return dataRows.flatMap(row => {
+            const fn = String(row[fnIdx] ?? '').trim();
+            if (!fn || !isFacultyNumber(fn) || seen.has(fn)) return [];
+            seen.add(fn);
+            return [{
+                faculty_number: fn,
+                first_name: firstIdx !== -1 ? String(row[firstIdx] ?? '').trim() : '',
+                last_name:  lastIdx  !== -1 ? String(row[lastIdx]  ?? '').trim() : '',
+            }];
+        });
+    }
+
+    // No header — flat extraction of anything that looks like a faculty number
+    const seen = new Set();
+    return rows.flat().flatMap(v => {
+        const fn = String(v ?? '').trim();
+        if (!fn || !isFacultyNumber(fn) || seen.has(fn)) return [];
+        seen.add(fn);
+        return [{ faculty_number: fn, first_name: '', last_name: '' }];
+    });
+}
+
 function parseExcel(file) {
     const reader = new FileReader();
     reader.onload = e => {
         const wb   = XLSX.read(e.target.result, { type: 'binary' });
         const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, defval: '' });
-        parsedFacultyNumbers = [...new Set(
-            rows.flat().map(v => String(v ?? '').trim()).filter(v => v.length > 0 && /^\d+$/.test(v))
-        )];
+        parsedStudents = buildStudentObjects(rows);
         showPreview();
     };
     reader.readAsBinaryString(file);
@@ -115,10 +172,8 @@ function parseExcel(file) {
 function parseCsv(file) {
     const reader = new FileReader();
     reader.onload = e => {
-        parsedFacultyNumbers = [...new Set(
-            e.target.result.split(/\r?\n/).flatMap(l => l.split(/[,;]/))
-                .map(v => v.trim()).filter(v => v.length > 0 && /^\d+$/.test(v))
-        )];
+        const rows = e.target.result.split(/\r?\n/).map(l => l.split(/[,;]/));
+        parsedStudents = buildStudentObjects(rows);
         showPreview();
     };
     reader.readAsText(file);
@@ -126,27 +181,31 @@ function parseCsv(file) {
 
 function showPreview() {
     const importMsg = document.getElementById('import-msg');
-    if (!parsedFacultyNumbers.length) {
+    if (!parsedStudents.length) {
         importMsg.className = 'small mt-2 text-warning';
-        importMsg.textContent = 'No faculty numbers found in file.';
+        importMsg.textContent = 'No valid faculty numbers found in file.';
         document.getElementById('preview').style.display = 'none';
         return;
     }
-    document.getElementById('fn-count').textContent  = parsedFacultyNumbers.length;
-    document.getElementById('fn-preview').value      = parsedFacultyNumbers.join('\n');
+    document.getElementById('fn-count').textContent = parsedStudents.length;
+    document.getElementById('fn-preview').value = parsedStudents
+        .map(s => s.first_name || s.last_name
+            ? `${s.faculty_number} (${[s.first_name, s.last_name].filter(Boolean).join(' ')})`
+            : s.faculty_number)
+        .join('\n');
     document.getElementById('preview').style.display = 'block';
     importMsg.textContent = '';
 }
 
 async function importStudents() {
-    if (!parsedFacultyNumbers.length) return;
+    if (!parsedStudents.length) return;
     const importMsg = document.getElementById('import-msg');
     try {
-        const data = await api('POST', '/api/users/import', { faculty_numbers: parsedFacultyNumbers });
+        const data = await api('POST', '/api/users/import', { students: parsedStudents });
         importMsg.className = 'small mt-2 text-success';
         importMsg.textContent = `Done — ${data.created} created, ${data.skipped} already existed.`;
         document.getElementById('preview').style.display = 'none';
-        parsedFacultyNumbers = [];
+        parsedStudents = [];
     } catch (err) {
         importMsg.className = 'small mt-2 text-danger';
         importMsg.textContent = err.message;

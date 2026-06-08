@@ -69,19 +69,27 @@ class UserController
 
     public function importStudents(): void
     {
-        $body           = json_decode(file_get_contents('php://input'), true);
-        $facultyNumbers = $body['faculty_numbers'] ?? [];
-    
-        if (!is_array($facultyNumbers) || empty($facultyNumbers)) {
+        $body = json_decode(file_get_contents('php://input'), true);
+
+        // Accept either structured `students` array or legacy `faculty_numbers` array
+        if (!empty($body['students']) && is_array($body['students'])) {
+            $students = $body['students'];
+        } elseif (!empty($body['faculty_numbers']) && is_array($body['faculty_numbers'])) {
+            $students = $body['faculty_numbers'];
+        } else {
+            $students = [];
+        }
+
+        if (empty($students)) {
             http_response_code(422);
-            echo json_encode(['success' => false, 'message' => 'No faculty numbers provided.']);
+            echo json_encode(['success' => false, 'message' => 'No students provided.']);
             return;
         }
-    
+
         $teacherId = AuthMiddleware::user()['sub'];
-    
+
         try {
-            $result = $this->userService->importStudents($facultyNumbers, $teacherId);
+            $result = $this->userService->importStudents($students, $teacherId);
             http_response_code(201);
             echo json_encode([
                 'success' => true,
