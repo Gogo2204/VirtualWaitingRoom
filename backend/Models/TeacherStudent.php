@@ -65,4 +65,26 @@ class TeacherStudent extends Model
 
         return $stmt->fetchAll(\PDO::FETCH_COLUMN);
     }
+
+    public function getAllWithNames(): array
+    {
+        $stmt = $this->db->query("
+            SELECT ts.teacher_id, ts.student_id,
+                   CONCAT(t.first_name, ' ', t.last_name) AS teacher_name,
+                   t.email AS teacher_email,
+                   CONCAT(s.first_name, ' ', s.last_name) AS student_name,
+                   s.faculty_number
+            FROM teacher_student ts
+            JOIN users t ON t.id = ts.teacher_id
+            JOIN users s ON s.id = ts.student_id
+            ORDER BY t.last_name, t.first_name, s.last_name, s.first_name
+        ");
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    public function remove(int $teacherId, int $studentId): void
+    {
+        $stmt = $this->db->prepare("DELETE FROM teacher_student WHERE teacher_id = ? AND student_id = ?");
+        $stmt->execute([$teacherId, $studentId]);
+    }
 }

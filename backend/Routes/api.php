@@ -13,6 +13,8 @@ header('Content-Type: application/json');
 
 if (str_starts_with($path, '/api/auth')) {
     require_once __DIR__ . '/auth.php';
+} elseif (str_starts_with($path, '/api/admin')) {
+    require_once __DIR__ . '/admin.php';
 } elseif (str_starts_with($path, '/api/users')) {
     require_once __DIR__ . '/users.php';
 } elseif (str_starts_with($path, '/api/rooms')) {

@@ -82,6 +82,18 @@ class User extends Model
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
 
+    public function getAll(): array
+    {
+        $stmt = $this->db->query("SELECT id, first_name, last_name, email, faculty_number, role, status, created_at FROM users ORDER BY role, last_name, first_name");
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    public function delete(int $id): void
+    {
+        $stmt = $this->db->prepare("DELETE FROM users WHERE id = ?");
+        $stmt->execute([$id]);
+    }
+
     public function update(int $id, array $data): void
     {
         unset($data['created_at'], $data['id']);

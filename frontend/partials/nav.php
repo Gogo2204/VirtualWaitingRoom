@@ -25,9 +25,12 @@
         return;
     }
 
+    const adminLinks = user.role === 'admin'
+        ? li('/admin/users', 'Users')
+        : (user.role === 'teacher' ? li('/rooms', 'Rooms') + li('/stats', 'Statistics') : li('/rooms', 'Rooms'));
+
     ul.innerHTML = li('/dashboard', 'Dashboard')
-        + li('/rooms', 'Rooms')
-        + li('/stats', 'Statistics')
+        + adminLinks
         + li('/profile', 'Profile')
         + `<li class="nav-item ms-md-2">
                <button class="btn btn-sm btn-outline-light"
