@@ -3,8 +3,7 @@
 
 <div class="auth-wrapper">
     <div class="auth-card">
-        <h4 class="fw-bold text-center mb-1">Sign in</h4>
-        <p class="text-center text-muted small mb-4">Virtual Waiting Room</p>
+        <h4 class="fw-bold text-center mb-4">Sign in</h4>
 
         <div class="mb-3">
             <label for="email" class="form-label">Email</label>

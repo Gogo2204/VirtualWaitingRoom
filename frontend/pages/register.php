@@ -3,8 +3,7 @@
 
 <div class="auth-wrapper">
     <div class="auth-card">
-        <h4 class="fw-bold text-center mb-1">Student Registration</h4>
-        <p class="text-center text-muted small mb-4">Create your account</p>
+        <h4 class="fw-bold text-center mb-4">Student Registration</h4>
 
         <div class="row g-2 mb-2">
             <div class="col-6">
