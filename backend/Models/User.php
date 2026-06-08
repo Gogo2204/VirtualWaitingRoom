@@ -88,10 +88,10 @@ class User extends Model
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
 
-    public function delete(int $id): void
+    public function delete(int $id): bool
     {
         $stmt = $this->db->prepare("DELETE FROM users WHERE id = ?");
-        $stmt->execute([$id]);
+        return $stmt->execute([$id]);
     }
 
     public function update(int $id, array $data): void
