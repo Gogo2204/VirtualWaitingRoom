@@ -172,9 +172,24 @@ function updateStudentControls(item) {
 
 async function loadQueue() {
     try {
+        // Preserve comment inputs and visibility dropdowns before re-render
+        const saved = {};
+        document.querySelectorAll('[id^="cmt-"]').forEach(el => {
+            const id = el.id.slice(4);
+            saved[id] = { text: el.value, vis: document.getElementById(`vis-${id}`)?.value ?? 'public' };
+        });
+
         const data = await api('GET', `/api/rooms/${roomId}/queue`);
         myItem = null;
         renderQueue(data.queue);
+
+        // Restore preserved state
+        Object.entries(saved).forEach(([id, { text, vis }]) => {
+            const cmtEl = document.getElementById(`cmt-${id}`);
+            const visEl = document.getElementById(`vis-${id}`);
+            if (cmtEl && text) cmtEl.value = text;
+            if (visEl) visEl.value = vis;
+        });
     } catch (err) { setMsg('msg', err.message); }
 }
 
