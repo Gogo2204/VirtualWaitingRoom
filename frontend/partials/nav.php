@@ -28,7 +28,7 @@
     ul.innerHTML = li('/dashboard', 'Dashboard')
         + li('/rooms', 'Rooms')
         + li('/stats', 'Statistics')
-        + li('/profile', user.first_name || 'Profile')
+        + li('/profile', 'Profile')
         + `<li class="nav-item ms-md-2">
                <button class="btn btn-sm btn-outline-light"
                    onclick="localStorage.removeItem('token');localStorage.removeItem('user');window.location.href='/login'">
