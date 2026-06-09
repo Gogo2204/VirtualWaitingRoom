@@ -104,7 +104,7 @@ function renderPagedUsers() {
             <tr>
                 <td style="text-align:left">${esc(u.first_name + ' ' + u.last_name)}</td>
                 <td class="text-muted small" style="text-align:left">${esc(u.email)}</td>
-                <td>${esc(u.faculty_number ?? '—')}</td>
+                <td>${esc(u.faculty_number ?? '-')}</td>
                 <td><span class="sb sb-${esc(u.role)}">${esc(u.role)}</span></td>
                 <td><span class="sb sb-${esc(u.status)}">${esc(u.status ?? '')}</span></td>
                 <td><button class="btn btn-sm btn-outline-danger py-0 px-2" onclick="deleteUser(${u.id},'${esc(u.email)}')">Delete</button></td>
@@ -121,7 +121,7 @@ function populateSelects() {
     document.getElementById('link-teacher').innerHTML = teachers.map(u =>
         `<option value="${u.id}">${esc(u.first_name + ' ' + u.last_name)}</option>`).join('');
     document.getElementById('link-student').innerHTML = students.map(u =>
-        `<option value="${u.id}">${esc((u.first_name || u.faculty_number) + ' ' + u.last_name)} — ${esc(u.faculty_number ?? '')}</option>`).join('');
+        `<option value="${u.id}">${esc((u.first_name || u.faculty_number) + ' ' + u.last_name)} - ${esc(u.faculty_number ?? '')}</option>`).join('');
 }
 
 async function deleteUser(id, email) {
@@ -152,7 +152,7 @@ function renderPagedLinks() {
             <tr>
                 <td style="text-align:left">${esc(l.teacher_name)} <span class="text-muted small">(${esc(l.teacher_email)})</span></td>
                 <td style="text-align:left">${esc(l.student_name)}</td>
-                <td class="text-muted small">${esc(l.faculty_number ?? '—')}</td>
+                <td class="text-muted small">${esc(l.faculty_number ?? '-')}</td>
                 <td><button class="btn btn-sm btn-outline-danger py-0 px-2"
                     onclick="removeLink(${l.teacher_id},${l.student_id})">Remove</button></td>
             </tr>`).join('');

@@ -78,7 +78,6 @@ class UserController
     {
         $body = json_decode(file_get_contents('php://input'), true);
 
-        // Accept either structured `students` array or legacy `faculty_numbers` array
         if (!empty($body['students']) && is_array($body['students'])) {
             $students = $body['students'];
         } elseif (!empty($body['faculty_numbers']) && is_array($body['faculty_numbers'])) {

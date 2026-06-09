@@ -67,7 +67,6 @@ class UserService
                 if ($this->teacherStudentModel !== null) {
                     $this->teacherStudentModel->importBatch($teacherId, [(int)$existing['id']]);
                 }
-                // Backfill name if the account is still a stub
                 if ($existing['status'] === 'imported') {
                     $update = [];
                     if ($firstName !== '' && ($existing['first_name'] ?? '') === '') $update['first_name'] = $firstName;

@@ -27,7 +27,7 @@ function setMsg(id, text, type = 'danger') {
 }
 
 function fmtSeconds(s) {
-    if (s === null || s === undefined) return '—';
+    if (s === null || s === undefined) return '-';
     const m   = Math.floor(s / 60);
     const sec = Math.round(s % 60);
     return m > 0 ? `${m}m ${sec}s` : `${sec}s`;

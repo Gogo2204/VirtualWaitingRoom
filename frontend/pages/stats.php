@@ -17,7 +17,7 @@
         <div id="student-room-section" class="mb-3" style="display:none">
             <label class="form-label small">Select room:</label>
             <select id="room-select" class="form-select form-select-sm w-auto">
-                <option value="">— pick a room —</option>
+                <option value="">- pick a room -</option>
             </select>
         </div>
 
@@ -41,7 +41,7 @@ let subjectData  = [];
 let sortCol = null, sortDir = 1;
 
 function fmtHour(h) {
-    if (h === null || h === undefined) return '—';
+    if (h === null || h === undefined) return '-';
     return `${String(h).padStart(2, '0')}:00`;
 }
 

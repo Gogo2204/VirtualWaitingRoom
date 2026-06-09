@@ -24,11 +24,11 @@
 
     <!-- Stats bar -->
     <div id="stats-bar" class="d-flex flex-wrap gap-4 mb-3 p-3 rounded border" style="display:none!important;background:var(--vwr-surface)">
-        <div><div class="small text-muted">Waiting</div><strong id="stat-waiting">—</strong></div>
-        <div><div class="small text-muted">In meeting</div><strong id="stat-meeting">—</strong></div>
-        <div><div class="small text-muted">Served today</div><strong id="stat-served">—</strong></div>
-        <div><div class="small text-muted">Avg queue</div><strong id="stat-avg-queue">—</strong></div>
-        <div><div class="small text-muted">Avg meeting</div><strong id="stat-avg-meet">—</strong></div>
+        <div><div class="small text-muted">Waiting</div><strong id="stat-waiting">-</strong></div>
+        <div><div class="small text-muted">In meeting</div><strong id="stat-meeting">-</strong></div>
+        <div><div class="small text-muted">Served today</div><strong id="stat-served">-</strong></div>
+        <div><div class="small text-muted">Avg queue</div><strong id="stat-avg-queue">-</strong></div>
+        <div><div class="small text-muted">Avg meeting</div><strong id="stat-avg-meet">-</strong></div>
     </div>
 
     <!-- Teacher bulk actions -->
@@ -243,19 +243,16 @@ function updateStudentControls(item) {
 
 async function loadQueue() {
     try {
-        // Save focused element + selection
         const focusedId = document.activeElement?.id || null;
         const selStart  = document.activeElement?.selectionStart ?? null;
         const selEnd    = document.activeElement?.selectionEnd   ?? null;
 
-        // Save comment inputs
         const saved = {};
         document.querySelectorAll('[id^="cmt-"]').forEach(el => {
             const id = el.id.slice(4);
             saved[id] = { text: el.value, vis: document.getElementById(`vis-${id}`)?.value ?? 'public' };
         });
 
-        // Save dates for open slot editors
         const savedSlotDates = {};
         openSlotIds.forEach(id => {
             savedSlotDates[id] = document.getElementById(`slot-date-${id}`)?.value || today;
@@ -265,7 +262,6 @@ async function loadQueue() {
         renderRoomHeader(data.room);
         renderQueue(data.queue);
 
-        // Restore comment inputs
         Object.entries(saved).forEach(([id, { text, vis }]) => {
             const cmtEl = document.getElementById(`cmt-${id}`);
             const visEl = document.getElementById(`vis-${id}`);
@@ -273,7 +269,6 @@ async function loadQueue() {
             if (visEl) visEl.value = vis;
         });
 
-        // Restore open slot editors (time sourced from bulk input which persists outside queue)
         const bulkTime  = document.getElementById('eta-all-input')?.value || '';
         const toRemove  = [];
         openSlotIds.forEach(id => {
@@ -290,7 +285,6 @@ async function loadQueue() {
         });
         toRemove.forEach(id => openSlotIds.delete(id));
 
-        // Restore focus + selection
         if (focusedId) {
             const el = document.getElementById(focusedId);
             if (el) {
@@ -384,7 +378,7 @@ async function finishMeeting(itemId) {
     try {
         const data = await api('POST', `/api/rooms/${roomId}/queue/${itemId}/finish`);
         const t    = data.times ?? {};
-        setMsg('msg', `Done — Queue: ${fmtSeconds(t.queue_seconds)}, Meeting: ${fmtSeconds(t.meeting_seconds)}`, 'success');
+        setMsg('msg', `Done - Queue: ${fmtSeconds(t.queue_seconds)}, Meeting: ${fmtSeconds(t.meeting_seconds)}`, 'success');
         loadQueue(); loadStats();
     } catch (err) { setMsg('msg', err.message); }
 }

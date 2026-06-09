@@ -389,7 +389,7 @@ a.text-decoration-none:hover { text-decoration: none !important; }
     background-size: 100%;
 }
 
-/* Collapse — hidden on mobile unless .show */
+/* Collapse - hidden on mobile unless .show */
 .navbar-collapse {
     flex-basis: 100%;
     flex-grow: 1;

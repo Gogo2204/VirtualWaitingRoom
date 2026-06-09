@@ -51,7 +51,7 @@ trimmed_diff = diff[:MAX_DIFF_SIZE]
 prompt = f"""
 You are reviewing a GitHub pull request.
 
-Return ONLY valid JSON — no markdown, no explanation.
+Return ONLY valid JSON - no markdown, no explanation.
 
 Format:
 [
@@ -73,7 +73,7 @@ Rules:
 - Only reference line numbers of ADDED lines (starting with +) from the diff
 - Never comment on removed lines (starting with -)
 - suggestion must be short and valid code
-- A suggestion REPLACES the entire commented line — always include the original line plus any additions
+- A suggestion REPLACES the entire commented line - always include the original line plus any additions
 - Return ONLY a JSON array, nothing else
 
 PR Diff:

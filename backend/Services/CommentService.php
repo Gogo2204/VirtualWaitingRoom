@@ -52,7 +52,6 @@ class CommentService
             return $comments;
         }
 
-        // student: sees public comments + private comments on their own item only
         return array_values(array_filter($comments, function ($c) use ($requesterId, $itemStudentId) {
             if ($c['visibility'] === 'public') return true;
             return $requesterId === $itemStudentId;

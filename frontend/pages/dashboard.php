@@ -187,7 +187,7 @@ async function loadStudents() {
             return;
         }
         const rows = data.students.map(s => `<tr>
-            <td>${s.faculty_number ?? '—'}</td>
+            <td>${s.faculty_number ?? '-'}</td>
             <td>${s.first_name} ${s.last_name}</td>
             <td>${s.email}</td>
             <td><span class="sb sb-${s.status}">${s.status}</span></td>
@@ -260,7 +260,6 @@ function buildStudentObjects(rows) {
     const firstRow = rows[0].map(v => String(v ?? '').trim());
     const { fnIdx, firstIdx, lastIdx } = detectColumns(firstRow);
 
-    // If header row detected (has a recognizable faculty number column)
     if (fnIdx !== -1) {
         const dataRows = rows.slice(1);
         const seen = new Set();
@@ -276,7 +275,6 @@ function buildStudentObjects(rows) {
         });
     }
 
-    // No header — flat extraction of anything that looks like a faculty number
     const seen = new Set();
     return rows.flat().flatMap(v => {
         const fn = String(v ?? '').trim();
@@ -331,7 +329,7 @@ async function importStudents() {
     try {
         const data = await api('POST', '/api/users/import', { students: parsedStudents });
         importMsg.className = 'small mt-2 text-success';
-        importMsg.textContent = `Done — ${data.created} created, ${data.skipped} already existed.`;
+        importMsg.textContent = `Done - ${data.created} created, ${data.skipped} already existed.`;
         document.getElementById('preview').style.display = 'none';
         parsedStudents = [];
         loadStudents();
