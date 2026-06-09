@@ -14,9 +14,7 @@
                 <a href="/rooms/create" class="btn btn-sm btn-primary">+ New Room</a>
                 <a href="/stats" class="btn btn-sm btn-outline-secondary">Statistics</a>
             </div>
-            <div id="student-actions" style="display:none">
-                <a href="/stats" class="btn btn-sm btn-outline-secondary">Statistics</a>
-            </div>
+            <div id="student-actions" style="display:none"></div>
         </div>
     </div>
 

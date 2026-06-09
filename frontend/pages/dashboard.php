@@ -132,9 +132,9 @@ function renderSubjects() {
             <span class="d-inline-flex align-items-center gap-2 border rounded px-2 py-1"
                 style="background:var(--vwr-surface);font-size:.875rem">
                 ${esc(s.type)}
-                <button onclick="deleteSubject(${s.id})"
-                    style="width:22px;height:22px;padding:0;font-size:.8rem;line-height:1;border-radius:3px;flex-shrink:0"
-                    class="btn btn-danger" aria-label="Remove">&#x2715;</button>
+                <button onclick="deleteSubject(${s.id})" type="button"
+                    style="background:none;border:none;padding:0;color:#dc3545;font-size:1rem;line-height:1;cursor:pointer;flex-shrink:0;font-weight:700"
+                    aria-label="Remove">&#x2715;</button>
             </span>`).join('')
         + '</div>';
 }

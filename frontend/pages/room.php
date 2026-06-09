@@ -254,6 +254,18 @@ async function loadQueue() {
             saved[id] = { text: el.value, vis: document.getElementById(`vis-${id}`)?.value ?? 'public' };
         });
 
+        // Save open slot editors
+        const openSlots = {};
+        document.querySelectorAll('[id^="slot-wrap-"]').forEach(el => {
+            if (!el.style.cssText.includes('none')) {
+                const id = el.id.slice('slot-wrap-'.length);
+                openSlots[id] = {
+                    date: document.getElementById(`slot-date-${id}`)?.value || today,
+                    time: document.getElementById(`slot-time-${id}`)?.value || '',
+                };
+            }
+        });
+
         const data = await api('GET', `/api/rooms/${roomId}/queue`);
         renderRoomHeader(data.room);
         renderQueue(data.queue);
@@ -264,6 +276,18 @@ async function loadQueue() {
             const visEl = document.getElementById(`vis-${id}`);
             if (cmtEl && text) cmtEl.value = text;
             if (visEl) visEl.value = vis;
+        });
+
+        // Restore open slot editors
+        Object.entries(openSlots).forEach(([id, { date, time }]) => {
+            const w = document.getElementById(`slot-wrap-${id}`);
+            if (w) {
+                w.style.cssText = 'display:inline-flex!important';
+                const dateEl = document.getElementById(`slot-date-${id}`);
+                const timeEl = document.getElementById(`slot-time-${id}`);
+                if (dateEl) dateEl.value = date;
+                if (timeEl) timeEl.value = time;
+            }
         });
 
         // Restore focus + selection

@@ -22,7 +22,7 @@
     }
 
     if (!user) {
-        ul.className = 'navbar-nav mx-auto align-items-md-center gap-md-2';
+        ul.className = 'navbar-nav mx-auto align-items-md-center gap-md-4';
         ul.innerHTML = `
             <li class="nav-item"><a class="btn btn-outline-light btn-sm" href="/login">Login</a></li>
             <li class="nav-item"><a class="btn btn-outline-light btn-sm" href="/register">Register</a></li>`;
