@@ -39,6 +39,10 @@
             <input type="time" id="eta-all-input" class="form-control form-control-sm" style="width:110px">
             <button onclick="setEtaAll()" class="btn btn-sm btn-outline-primary">Set ETA for all</button>
         </div>
+        <div class="d-flex gap-1 align-items-center">
+            <input type="number" id="add-minutes-input" class="form-control form-control-sm" style="width:70px" min="1" value="5">
+            <button onclick="addEtaMinutes()" class="btn btn-sm btn-outline-secondary">+min to ETA</button>
+        </div>
     </div>
 
     <!-- Student controls -->
@@ -113,12 +117,6 @@ function buildActions(item) {
         if (item.status === 'waiting') {
             html += `<button class="btn btn-sm btn-outline-warning me-1" onclick="invite(${item.id},'temp')">Temp. invite</button>`;
             html += `<button class="btn btn-sm btn-primary me-1" onclick="invite(${item.id},'perm')">Invite to meeting</button>`;
-            html += `<button class="btn btn-sm btn-outline-secondary me-1" onclick="toggleSlot(${item.id})">Set slot</button>`;
-            html += `<span id="slot-wrap-${item.id}" class="d-inline-flex gap-1 align-items-center" style="display:none!important">
-                <input type="date" id="slot-date-${item.id}" class="form-control form-control-sm" value="${today}" style="width:140px">
-                <input type="time" id="slot-time-${item.id}" class="form-control form-control-sm" style="width:90px">
-                <button class="btn btn-sm btn-outline-primary" onclick="setSlot(${item.id})">✓</button>
-            </span>`;
         }
         if (item.status === 'invited_temp')
             html += `<button class="btn btn-sm btn-warning" onclick="studentReturn(${item.id})">Mark returned</button>`;
@@ -173,15 +171,26 @@ function renderQueue(queue) {
         if (item.status === 'done' && item.times)
             statusExtra = `<br><small class="text-muted">Queue: ${fmtSeconds(item.times.queue_seconds)} · Meet: ${fmtSeconds(item.times.meeting_seconds)}</small>`;
 
-        const eta = (item.eta && item.status === 'waiting')
+        const etaDisplay = (item.eta && item.status === 'waiting')
             ? `<small>${new Date(item.eta).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</small>`
+            : '';
+
+        const etaSetBtn = (user.role === 'teacher' && item.status === 'waiting')
+            ? `<div class="mt-1">
+                <button class="btn btn-sm btn-outline-secondary py-0 px-1" onclick="toggleSlot(${item.id})">Set</button>
+                <span id="slot-wrap-${item.id}" class="d-inline-flex gap-1 align-items-center mt-1" style="display:none!important">
+                    <input type="date" id="slot-date-${item.id}" class="form-control form-control-sm" value="${today}" style="width:130px">
+                    <input type="time" id="slot-time-${item.id}" class="form-control form-control-sm" style="width:85px">
+                    <button class="btn btn-sm btn-outline-primary py-0 px-1" onclick="setSlot(${item.id})">✓</button>
+                </span>
+               </div>`
             : '';
 
         return `<tr class="row-${item.status}">
             <td style="width:2.5rem">${idx + 1}</td>
             <td style="width:14rem;text-align:left">${item.first_name} ${item.last_name}</td>
             <td style="width:10rem"><span class="sb sb-${item.status}">${STATUS_LABEL[item.status] ?? item.status}</span>${statusExtra}</td>
-            <td style="width:6rem">${eta}</td>
+            <td style="width:8rem">${etaDisplay}${etaSetBtn}</td>
             <td style="text-align:left">${buildComments(item.comments)}${buildActions(item)}</td>
         </tr>`;
     }).join('');
@@ -216,13 +225,13 @@ function renderStats(s) {
 function updateStudentControls(item) {
     if (user.role !== 'student') return;
     const canLeave = item?.status === 'waiting';
-    const inMeet   = item?.status === 'invited_perm' && item.meeting_link;
+    const invited  = (item?.status === 'invited_perm' || item?.status === 'invited_temp') && item.meeting_link;
 
     document.getElementById('join-btn').classList.toggle('d-none', !!item);
     document.getElementById('leave-btn').classList.toggle('d-none', !canLeave);
 
     const banner = document.getElementById('meeting-banner');
-    if (inMeet) {
+    if (invited) {
         const a = document.getElementById('meeting-href');
         a.href = a.textContent = item.meeting_link;
         banner.classList.remove('d-none');
@@ -299,6 +308,15 @@ async function setEtaAll() {
     if (!time) return;
     try {
         await api('POST', `/api/rooms/${roomId}/queue/set-eta-all`, { start_datetime: `${today}T${time}` });
+        loadQueue();
+    } catch (err) { setMsg('msg', err.message); }
+}
+
+async function addEtaMinutes() {
+    const minutes = parseInt(document.getElementById('add-minutes-input')?.value);
+    if (!minutes || minutes <= 0) return;
+    try {
+        await api('POST', `/api/rooms/${roomId}/queue/add-eta-minutes`, { minutes });
         loadQueue();
     } catch (err) { setMsg('msg', err.message); }
 }

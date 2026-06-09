@@ -34,7 +34,7 @@ const user = requireAuth('teacher', 'student', 'admin');
 let allRooms     = [];
 let activeFilter = 'all';
 
-if (user.role === 'teacher' || user.role === 'admin') {
+if (user.role === 'teacher') {
     document.getElementById('teacher-actions').style.display = 'flex';
 } else {
     document.getElementById('student-actions').style.display = 'block';

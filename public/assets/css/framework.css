@@ -193,6 +193,9 @@ a.text-decoration-none:hover { text-decoration: none !important; }
 .btn-warning       { color: #000; background-color: #ffc107; border-color: #ffc107; }
 .btn-warning:hover { color: #000; background-color: #ffca2c; }
 
+.btn-outline-warning       { color: #997404; border-color: #ffc107; }
+.btn-outline-warning:hover { color: #000; background-color: #ffc107; }
+
 .btn-success       { color: #fff; background-color: #198754; border-color: #198754; }
 .btn-success:hover { color: #fff; background-color: #157347; }
 
@@ -414,3 +417,21 @@ a.text-decoration-none:hover { text-decoration: none !important; }
 }
 .nav-link:hover  { color: rgba(255,255,255,.75); text-decoration: none; }
 .nav-link.active { color: #fff; }
+
+/* ── Missing utilities ────────────────────────────────────────────────── */
+.w-100  { width: 100% !important; }
+.px-1   { padding-right: .25rem !important; padding-left: .25rem !important; }
+.px-3   { padding-right: 1rem !important;   padding-left: 1rem !important; }
+.px-4   { padding-right: 1.5rem !important; padding-left: 1.5rem !important; }
+.px-5   { padding-right: 3rem !important;   padding-left: 3rem !important; }
+.pb-2   { padding-bottom: .5rem !important; }
+.pb-3   { padding-bottom: 1rem !important; }
+.pt-3   { padding-top: 1rem !important; }
+.gap-3  { gap: 1rem !important; }
+.gap-4  { gap: 1.5rem !important; }
+.justify-content-end    { justify-content: flex-end !important; }
+.justify-content-center { justify-content: center !important; }
+.mx-auto { margin-right: auto !important; margin-left: auto !important; }
+.d-inline-flex { display: inline-flex !important; }
+.rounded { border-radius: .375rem !important; }
+.col-lg-auto { flex: 0 0 auto; width: auto; max-width: none; }

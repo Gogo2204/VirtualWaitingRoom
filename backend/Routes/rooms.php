@@ -83,6 +83,11 @@ match (true) {
         makeRoomController()->setEtaAll($roomId);
     })(),
 
+    $method === 'POST' && $roomId !== null && $segment3 === 'queue' && $segment4 === 'add-eta-minutes' => (function () use ($roomId) {
+        AuthMiddleware::require('teacher');
+        makeRoomController()->addEtaMinutes($roomId);
+    })(),
+
     $method === 'POST' && $roomId !== null && $segment3 === 'queue' && $itemId === null && $segment4 === null => (function () use ($roomId) {
         AuthMiddleware::require('student');
         makeRoomController()->joinQueue($roomId);

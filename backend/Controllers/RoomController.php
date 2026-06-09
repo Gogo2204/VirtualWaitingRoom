@@ -159,6 +159,23 @@ class RoomController
         }
     }
 
+    public function addEtaMinutes(int $roomId): void
+    {
+        $body    = json_decode(file_get_contents('php://input'), true) ?? [];
+        $minutes = (int)($body['minutes'] ?? 0);
+        try {
+            $this->roomService->addEtaMinutes($roomId, $minutes);
+            echo json_encode(['success' => true]);
+        } catch (\InvalidArgumentException $e) {
+            http_response_code(422);
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        } catch (\RuntimeException $e) {
+            $code = (int)$e->getCode();
+            http_response_code($code >= 400 && $code < 600 ? $code : 500);
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+
     public function inviteAllTemp(int $roomId): void
     {
         try {

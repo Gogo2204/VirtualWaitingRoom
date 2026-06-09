@@ -126,6 +126,16 @@ class RoomItem extends Model
         return $counts;
     }
 
+    public function addMinutesToEta(int $roomId, int $minutes): void
+    {
+        $stmt = $this->db->prepare("
+            UPDATE room_items
+            SET eta = DATE_ADD(eta, INTERVAL ? MINUTE)
+            WHERE room_id = ? AND status = 'waiting' AND eta IS NOT NULL AND eta > NOW()
+        ");
+        $stmt->execute([$minutes, $roomId]);
+    }
+
     public function updateStatusBulk(int $roomId, string $fromStatus, string $toStatus): int
     {
         $stmt = $this->db->prepare("

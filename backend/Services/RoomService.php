@@ -97,7 +97,7 @@ class RoomService
             if ($item['status'] === 'done') {
                 $item['times'] = $times[(int)$item['id']] ?? ['queue_seconds' => 0, 'meeting_seconds' => 0];
             }
-            if ($item['status'] === 'invited_perm') {
+            if ($item['status'] === 'invited_perm' || $item['status'] === 'invited_temp') {
                 $item['meeting_link'] = $room['url'] ?? '';
             }
         }
@@ -270,6 +270,15 @@ class RoomService
         }
 
         $this->roomItemModel->setEta($roomItemId, $datetime);
+    }
+
+    public function addEtaMinutes(int $roomId, int $minutes): void
+    {
+        if (!$this->roomModel->findById($roomId)) {
+            throw new \RuntimeException('Room not found.', 404);
+        }
+        if ($minutes <= 0) throw new \InvalidArgumentException('Minutes must be positive.');
+        $this->roomItemModel->addMinutesToEta($roomId, $minutes);
     }
 
     public function inviteAllTemp(int $roomId): int

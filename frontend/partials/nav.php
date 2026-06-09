@@ -22,7 +22,10 @@
     }
 
     if (!user) {
-        ul.innerHTML = li('/login', 'Login') + li('/register', 'Register');
+        ul.className = 'navbar-nav mx-auto align-items-md-center gap-md-2';
+        ul.innerHTML = `
+            <li class="nav-item"><a class="btn btn-outline-light btn-sm" href="/login">Login</a></li>
+            <li class="nav-item"><a class="btn btn-outline-light btn-sm" href="/register">Register</a></li>`;
         return;
     }
 
