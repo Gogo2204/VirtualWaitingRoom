@@ -3,22 +3,6 @@
 
 <div class="container-lg py-4">
 
-    <!-- Stats overview -->
-    <div id="stats-row" class="d-flex flex-wrap gap-3 mb-4"></div>
-
-    <!-- Subjects -->
-    <div class="card mb-4">
-        <div class="card-body">
-            <p class="page-section-title">Subjects</p>
-            <div class="d-flex gap-2 mb-3">
-                <input type="text" id="new-subject" class="form-control form-control-sm" style="max-width:220px">
-                <button onclick="addSubject()" class="btn btn-sm btn-primary">Add</button>
-                <div id="subj-msg" class="small align-self-center"></div>
-            </div>
-            <div id="subjects-list"><em class="text-muted small">Loading…</em></div>
-        </div>
-    </div>
-
     <!-- Users -->
     <div class="card mb-4">
         <div class="card-body p-0">
@@ -97,73 +81,6 @@ function pager(current, total, fn) {
     return `<div class="d-flex gap-1 align-items-center mt-2">${btns.join('')}</div>`;
 }
 
-/* ── Stats ─────────────────────────────────────────────────────── */
-async function loadStats() {
-    try {
-        const data = await api('GET', '/api/admin/stats');
-        const s = data.stats, u = s.users_by_role ?? {}, r = s.rooms_by_status ?? {};
-        const cards = [
-            { label: 'Admins',       value: u.admin   ?? 0 },
-            { label: 'Teachers',     value: u.teacher ?? 0 },
-            { label: 'Students',     value: u.student ?? 0 },
-            { label: 'Open rooms',   value: r.open    ?? 0 },
-            { label: 'Closed rooms', value: r.closed  ?? 0 },
-            { label: 'Active queue', value: s.active_queue   },
-            { label: 'Comments',     value: s.total_comments },
-        ];
-        document.getElementById('stats-row').innerHTML = cards.map(c =>
-            `<div class="card px-3 py-2 text-center" style="min-width:88px">
-                <div style="font-size:1.5rem;font-weight:700;color:var(--vwr-primary)">${c.value}</div>
-                <div class="small text-muted">${c.label}</div>
-            </div>`).join('');
-    } catch { /* non-critical */ }
-}
-
-/* ── Subjects ───────────────────────────────────────────────────── */
-let subjects = [];
-
-async function loadSubjects() {
-    try {
-        const data = await api('GET', '/api/admin/subjects');
-        subjects = data.subjects;
-        renderSubjects();
-    } catch (err) {
-        document.getElementById('subjects-list').innerHTML = `<p class="text-danger small">${err.message}</p>`;
-    }
-}
-
-function renderSubjects() {
-    const el = document.getElementById('subjects-list');
-    if (!subjects.length) { el.innerHTML = '<p class="text-muted small">No subjects yet.</p>'; return; }
-    el.innerHTML = '<div class="d-flex flex-wrap gap-2">'
-        + subjects.map(s => `
-            <span class="badge border d-inline-flex align-items-center gap-1"
-                style="font-size:.85rem;padding:.4em .7em;background:var(--vwr-surface);color:var(--vwr-text);border-color:var(--vwr-border)!important">
-                ${esc(s.type)}
-                <button onclick="deleteSubject(${s.id})" class="btn-close" style="font-size:.55rem" aria-label="Remove"></button>
-            </span>`).join('')
-        + '</div>';
-}
-
-async function addSubject() {
-    const input = document.getElementById('new-subject');
-    const type  = input.value.trim();
-    if (!type) return;
-    try {
-        await api('POST', '/api/admin/subjects', { type });
-        input.value = '';
-        setMsg('subj-msg', 'Added.', 'success');
-        loadSubjects();
-        loadStats();
-        setTimeout(() => setMsg('subj-msg', ''), 2000);
-    } catch (err) { setMsg('subj-msg', err.message); }
-}
-
-async function deleteSubject(id) {
-    try { await api('DELETE', `/api/admin/subjects/${id}`); loadSubjects(); loadStats(); }
-    catch (err) { setMsg('subj-msg', err.message); }
-}
-
 /* ── Users ──────────────────────────────────────────────────────── */
 let allUsers = [], usersPage = 1;
 
@@ -209,7 +126,7 @@ function populateSelects() {
 
 async function deleteUser(id, email) {
     if (!confirm(`Delete user ${email}? This cannot be undone.`)) return;
-    try { await api('DELETE', `/api/admin/users/${id}`); loadUsers(); loadLinks(); loadStats(); }
+    try { await api('DELETE', `/api/admin/users/${id}`); loadUsers(); loadLinks(); }
     catch (err) { alert(err.message); }
 }
 
@@ -306,13 +223,11 @@ function renderPagedComments() {
 function setCommentsPage(p) { commentsPage = p; renderPagedComments(); }
 
 async function deleteComment(id) {
-    try { await api('DELETE', `/api/admin/comments/${id}`); loadComments(); loadStats(); }
+    try { await api('DELETE', `/api/admin/comments/${id}`); loadComments(); }
     catch (err) { alert(err.message); }
 }
 
 /* ── Init ───────────────────────────────────────────────────────── */
-loadStats();
-loadSubjects();
 loadUsers();
 loadLinks();
 loadComments();

@@ -5,6 +5,21 @@
     <!-- Admin stats overview -->
     <div id="admin-stats-row" class="d-flex flex-wrap gap-3 mb-4" style="display:none"></div>
 
+    <!-- Admin: subjects -->
+    <div id="admin-subjects-section" class="mb-4" style="display:none">
+        <div class="card">
+            <div class="card-body">
+                <p class="page-section-title">Subjects</p>
+                <div class="d-flex gap-2 mb-3">
+                    <input type="text" id="new-subject" class="form-control form-control-sm" style="max-width:220px">
+                    <button onclick="addSubject()" class="btn btn-sm btn-primary">Add</button>
+                    <div id="subj-msg" class="small align-self-center"></div>
+                </div>
+                <div id="subjects-list"><em class="text-muted small">Loading…</em></div>
+            </div>
+        </div>
+    </div>
+
     <div class="row g-4">
 
         <!-- Admin: create teacher -->
@@ -74,11 +89,72 @@ if (user.role === 'student') {
 } else if (user.role === 'admin') {
     document.getElementById('admin-section').style.display = 'block';
     document.getElementById('admin-stats-row').style.display = 'flex';
+    document.getElementById('admin-subjects-section').style.display = 'block';
     loadAdminStats();
+    loadSubjects();
 } else {
     document.getElementById('teacher-section').style.display = 'block';
     document.getElementById('teacher-students-section').style.display = 'block';
     loadStudents();
+}
+
+function esc(v) {
+    return String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function setDashMsg(id, text, type) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.className = `small align-self-center${type === 'success' ? ' text-success' : ' text-danger'}`;
+    el.textContent = text;
+}
+
+/* ── Subjects ───────────────────────────────────────────────────── */
+let subjects = [];
+
+async function loadSubjects() {
+    try {
+        const data = await api('GET', '/api/admin/subjects');
+        subjects = data.subjects;
+        renderSubjects();
+    } catch (err) {
+        const el = document.getElementById('subjects-list');
+        if (el) el.innerHTML = `<p class="text-danger small">${err.message}</p>`;
+    }
+}
+
+function renderSubjects() {
+    const el = document.getElementById('subjects-list');
+    if (!el) return;
+    if (!subjects.length) { el.innerHTML = '<p class="text-muted small">No subjects yet.</p>'; return; }
+    el.innerHTML = '<div class="d-flex flex-wrap gap-2">'
+        + subjects.map(s => `
+            <span class="d-inline-flex align-items-center gap-2 border rounded px-2 py-1"
+                style="background:var(--vwr-surface);font-size:.875rem">
+                ${esc(s.type)}
+                <button onclick="deleteSubject(${s.id})"
+                    style="width:22px;height:22px;padding:0;font-size:.8rem;line-height:1;border-radius:3px;flex-shrink:0"
+                    class="btn btn-danger" aria-label="Remove">&#x2715;</button>
+            </span>`).join('')
+        + '</div>';
+}
+
+async function addSubject() {
+    const input = document.getElementById('new-subject');
+    const type  = input.value.trim();
+    if (!type) return;
+    try {
+        await api('POST', '/api/admin/subjects', { type });
+        input.value = '';
+        setDashMsg('subj-msg', 'Added.', 'success');
+        loadSubjects();
+        setTimeout(() => { const el = document.getElementById('subj-msg'); if (el) el.textContent = ''; }, 2000);
+    } catch (err) { setDashMsg('subj-msg', err.message); }
+}
+
+async function deleteSubject(id) {
+    try { await api('DELETE', `/api/admin/subjects/${id}`); loadSubjects(); }
+    catch (err) { setDashMsg('subj-msg', err.message); }
 }
 
 async function loadAdminStats() {
