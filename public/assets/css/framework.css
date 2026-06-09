@@ -66,6 +66,9 @@ img { max-width: 100%; height: auto; }
     .row-cols-md-2 > * { flex: 0 0 auto; width: 50%; }
     .align-items-md-center { align-items: center !important; }
     .gap-md-1 { gap: .25rem !important; }
+    .gap-md-2 { gap: .5rem  !important; }
+    .gap-md-3 { gap: 1rem   !important; }
+    .gap-md-4 { gap: 1.5rem !important; }
     .ms-md-2  { margin-left: .5rem !important; }
     .navbar-expand-md .navbar-toggler    { display: none; }
     .navbar-expand-md .navbar-collapse   { display: flex !important; flex-basis: auto; flex-grow: 0; flex-direction: row !important; }

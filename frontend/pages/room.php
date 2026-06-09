@@ -62,10 +62,11 @@
 
 <?php require_once __DIR__ . '/../partials/app.js.php'; ?>
 <script>
-const roomId = <?= (int)$roomId ?>;
-const user   = requireAuth();
-let   myItem = null;
-const today  = new Date().toISOString().slice(0, 10);
+const roomId     = <?= (int)$roomId ?>;
+const user       = requireAuth();
+let   myItem     = null;
+const today      = new Date().toISOString().slice(0, 10);
+const openSlotIds = new Set();
 
 const STATUS_LABEL = {
     waiting:      'Waiting',
@@ -254,16 +255,10 @@ async function loadQueue() {
             saved[id] = { text: el.value, vis: document.getElementById(`vis-${id}`)?.value ?? 'public' };
         });
 
-        // Save open slot editors
-        const openSlots = {};
-        document.querySelectorAll('[id^="slot-wrap-"]').forEach(el => {
-            if (!el.style.cssText.includes('none')) {
-                const id = el.id.slice('slot-wrap-'.length);
-                openSlots[id] = {
-                    date: document.getElementById(`slot-date-${id}`)?.value || today,
-                    time: document.getElementById(`slot-time-${id}`)?.value || '',
-                };
-            }
+        // Save dates for open slot editors
+        const savedSlotDates = {};
+        openSlotIds.forEach(id => {
+            savedSlotDates[id] = document.getElementById(`slot-date-${id}`)?.value || today;
         });
 
         const data = await api('GET', `/api/rooms/${roomId}/queue`);
@@ -278,17 +273,22 @@ async function loadQueue() {
             if (visEl) visEl.value = vis;
         });
 
-        // Restore open slot editors
-        Object.entries(openSlots).forEach(([id, { date, time }]) => {
+        // Restore open slot editors (time sourced from bulk input which persists outside queue)
+        const bulkTime  = document.getElementById('eta-all-input')?.value || '';
+        const toRemove  = [];
+        openSlotIds.forEach(id => {
             const w = document.getElementById(`slot-wrap-${id}`);
             if (w) {
                 w.style.cssText = 'display:inline-flex!important';
                 const dateEl = document.getElementById(`slot-date-${id}`);
                 const timeEl = document.getElementById(`slot-time-${id}`);
-                if (dateEl) dateEl.value = date;
-                if (timeEl) timeEl.value = time;
+                if (dateEl) dateEl.value = savedSlotDates[id] || today;
+                if (timeEl) timeEl.value = bulkTime;
+            } else {
+                toRemove.push(id);
             }
         });
+        toRemove.forEach(id => openSlotIds.delete(id));
 
         // Restore focus + selection
         if (focusedId) {
@@ -311,10 +311,19 @@ async function loadStats() {
 }
 
 function toggleSlot(itemId) {
-    const w = document.getElementById(`slot-wrap-${itemId}`);
+    const id = String(itemId);
+    const w  = document.getElementById(`slot-wrap-${id}`);
     if (!w) return;
-    const hidden = w.style.cssText.includes('none');
-    w.style.cssText = hidden ? 'display:inline-flex!important' : 'display:none!important';
+    const opening = !openSlotIds.has(id);
+    w.style.cssText = opening ? 'display:inline-flex!important' : 'display:none!important';
+    if (opening) {
+        openSlotIds.add(id);
+        const bulkTime = document.getElementById('eta-all-input')?.value || '';
+        const timeEl   = document.getElementById(`slot-time-${id}`);
+        if (timeEl && bulkTime) timeEl.value = bulkTime;
+    } else {
+        openSlotIds.delete(id);
+    }
 }
 
 async function setSlot(itemId) {
