@@ -10,7 +10,7 @@
                 <button class="btn btn-outline-secondary" data-filter="closed">Closed</button>
                 <button class="btn btn-outline-secondary" data-filter="archived">Archived</button>
             </div>
-            <div id="teacher-actions" style="display:none" class="d-flex gap-2">
+            <div id="teacher-actions" style="display:none" class="gap-2">
                 <a href="/rooms/create" class="btn btn-sm btn-primary">+ New Room</a>
                 <a href="/stats" class="btn btn-sm btn-outline-secondary">Statistics</a>
             </div>
