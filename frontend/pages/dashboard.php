@@ -109,7 +109,6 @@ function setDashMsg(id, text, type) {
     el.textContent = text;
 }
 
-/* ── Subjects ───────────────────────────────────────────────────── */
 let subjects = [];
 
 async function loadSubjects() {

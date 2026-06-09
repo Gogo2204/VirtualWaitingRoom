@@ -81,7 +81,6 @@ function pager(current, total, fn) {
     return `<div class="d-flex gap-1 align-items-center mt-2">${btns.join('')}</div>`;
 }
 
-/* ── Users ──────────────────────────────────────────────────────── */
 let allUsers = [], usersPage = 1;
 
 async function loadUsers() {
@@ -130,7 +129,6 @@ async function deleteUser(id, email) {
     catch (err) { alert(err.message); }
 }
 
-/* ── Teacher–Student links ──────────────────────────────────────── */
 let allLinks = [], linksPage = 1;
 
 async function loadLinks() {
@@ -182,7 +180,6 @@ async function removeLink(teacherId, studentId) {
     catch (err) { alert(err.message); }
 }
 
-/* ── Comments ───────────────────────────────────────────────────── */
 let allComments = [], commentsPage = 1;
 
 async function loadComments() {
@@ -227,7 +224,6 @@ async function deleteComment(id) {
     catch (err) { alert(err.message); }
 }
 
-/* ── Init ───────────────────────────────────────────────────────── */
 loadUsers();
 loadLinks();
 loadComments();

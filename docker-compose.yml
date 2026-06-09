@@ -39,7 +39,7 @@ services:
       - ./docker/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - vwr_network
-  
+
   mailpit:
     image: axllent/mailpit
     container_name: vwr_mailpit

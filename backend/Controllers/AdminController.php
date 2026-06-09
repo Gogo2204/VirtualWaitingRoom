@@ -18,7 +18,6 @@ class AdminController
         private Comment $commentModel,
     ) {}
 
-    /* ── Stats ───────────────────────────────────────────────────── */
     public function getStats(): void
     {
         $usersByRole   = $this->db->query("SELECT role, COUNT(*) FROM users GROUP BY role")
@@ -38,7 +37,6 @@ class AdminController
         ]]);
     }
 
-    /* ── Users ───────────────────────────────────────────────────── */
     public function listUsers(): void
     {
         echo json_encode(['success' => true, 'users' => $this->userModel->getAll()]);
@@ -62,7 +60,6 @@ class AdminController
         echo json_encode(['success' => true]);
     }
 
-    /* ── Teacher–Student ─────────────────────────────────────────── */
     public function listTeacherStudents(): void
     {
         echo json_encode(['success' => true, 'links' => $this->tsModel->getAllWithNames()]);
@@ -98,7 +95,6 @@ class AdminController
         echo json_encode(['success' => true]);
     }
 
-    /* ── Subjects ────────────────────────────────────────────────── */
     public function listSubjects(): void
     {
         echo json_encode(['success' => true, 'subjects' => $this->subjectModel->getAll()]);
@@ -135,7 +131,6 @@ class AdminController
         echo json_encode(['success' => true]);
     }
 
-    /* ── Comments ────────────────────────────────────────────────── */
     public function listComments(): void
     {
         echo json_encode(['success' => true, 'comments' => $this->commentModel->getAll(100)]);

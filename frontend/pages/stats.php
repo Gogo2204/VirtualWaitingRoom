@@ -45,7 +45,6 @@ function fmtHour(h) {
     return `${String(h).padStart(2, '0')}:00`;
 }
 
-/* ── Subject table ─────────────────────────────────────── */
 function sortBy(col) {
     sortDir = (sortCol === col) ? sortDir * -1 : 1;
     sortCol = col;
@@ -102,7 +101,6 @@ async function loadSubjectStats() {
     } catch (err) { setMsg('msg', err.message); }
 }
 
-/* ── Room stats ────────────────────────────────────────── */
 function renderRoomStats(s) {
     function row(label, value, highlight = false) {
         return `<tr><th scope="row" class="text-muted fw-normal">${label}</th>
@@ -156,7 +154,6 @@ async function loadRoomStatsFromSelect() {
     await loadRoomStats(id);
 }
 
-/* ── Init ──────────────────────────────────────────────── */
 (async () => {
     if (user.role === 'teacher' || user.role === 'admin') {
         document.getElementById('teacher-section').style.display      = 'block';
