@@ -23,7 +23,9 @@
                 <label class="form-label">Email</label>
                 <input type="email" id="email" class="form-control form-control-sm">
             </div>
-            <button onclick="updateProfile()" class="btn btn-sm btn-primary">Save changes</button>
+            <div class="text-center mt-3">
+                <button onclick="updateProfile()" class="btn btn-sm btn-primary px-4">Save changes</button>
+            </div>
             <div id="profile-msg" class="small mt-2"></div>
         </div>
     </div>
@@ -34,17 +36,19 @@
             <p class="page-section-title">Change Password</p>
             <div class="mb-2">
                 <label class="form-label">Current password</label>
-                <input type="password" id="current_password" class="form-control form-control-sm" placeholder="Current password">
+                <input type="password" id="current_password" class="form-control form-control-sm">
             </div>
             <div class="mb-2">
                 <label class="form-label">New password</label>
-                <input type="password" id="new_password" class="form-control form-control-sm" placeholder="New password">
+                <input type="password" id="new_password" class="form-control form-control-sm">
             </div>
             <div class="mb-3">
                 <label class="form-label">Confirm new password</label>
-                <input type="password" id="confirm_password" class="form-control form-control-sm" placeholder="Confirm new password">
+                <input type="password" id="confirm_password" class="form-control form-control-sm">
             </div>
-            <button onclick="changePassword()" class="btn btn-sm btn-outline-primary">Change password</button>
+            <div class="text-center mt-3">
+                <button onclick="changePassword()" class="btn btn-sm btn-outline-primary px-4">Change password</button>
+            </div>
             <div id="pwd-msg" class="small mt-2"></div>
         </div>
     </div>

@@ -2,6 +2,9 @@
 <?php require_once __DIR__ . '/../partials/nav.php'; ?>
 
 <div class="container-lg py-4">
+    <!-- Admin stats overview -->
+    <div id="admin-stats-row" class="d-flex flex-wrap gap-3 mb-4" style="display:none"></div>
+
     <div class="row g-4">
 
         <!-- Admin: create teacher -->
@@ -12,16 +15,16 @@
                     <div class="row g-2 mb-2">
                         <div class="col-6">
                             <label class="form-label">First name</label>
-                            <input type="text" id="first_name" class="form-control form-control-sm" placeholder="First name">
+                            <input type="text" id="first_name" class="form-control form-control-sm" >
                         </div>
                         <div class="col-6">
                             <label class="form-label">Last name</label>
-                            <input type="text" id="last_name" class="form-control form-control-sm" placeholder="Last name">
+                            <input type="text" id="last_name" class="form-control form-control-sm" >
                         </div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Email</label>
-                        <input type="email" id="email" class="form-control form-control-sm" placeholder="teacher@example.com">
+                        <input type="email" id="email" class="form-control form-control-sm" >
                     </div>
                     <button onclick="addTeacher()" class="btn btn-sm btn-primary">Create Teacher</button>
                     <div id="msg" class="small mt-2"></div>
@@ -70,10 +73,33 @@ if (user.role === 'student') {
     window.location.replace('/rooms');
 } else if (user.role === 'admin') {
     document.getElementById('admin-section').style.display = 'block';
+    document.getElementById('admin-stats-row').style.display = 'flex';
+    loadAdminStats();
 } else {
     document.getElementById('teacher-section').style.display = 'block';
     document.getElementById('teacher-students-section').style.display = 'block';
     loadStudents();
+}
+
+async function loadAdminStats() {
+    try {
+        const data = await api('GET', '/api/admin/stats');
+        const s = data.stats, u = s.users_by_role ?? {}, r = s.rooms_by_status ?? {};
+        const cards = [
+            { label: 'Admins',       value: u.admin   ?? 0 },
+            { label: 'Teachers',     value: u.teacher ?? 0 },
+            { label: 'Students',     value: u.student ?? 0 },
+            { label: 'Open rooms',   value: r.open    ?? 0 },
+            { label: 'Closed rooms', value: r.closed  ?? 0 },
+            { label: 'Active queue', value: s.active_queue   },
+            { label: 'Comments',     value: s.total_comments },
+        ];
+        document.getElementById('admin-stats-row').innerHTML = cards.map(c =>
+            `<div class="card px-3 py-2 text-center" style="min-width:88px">
+                <div style="font-size:1.5rem;font-weight:700;color:var(--vwr-primary)">${c.value}</div>
+                <div class="small text-muted">${c.label}</div>
+            </div>`).join('');
+    } catch { /* non-critical */ }
 }
 
 async function loadStudents() {

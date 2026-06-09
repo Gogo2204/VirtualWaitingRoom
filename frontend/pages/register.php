@@ -8,24 +8,24 @@
         <div class="row g-2 mb-2">
             <div class="col-6">
                 <label for="first_name" class="form-label">First name</label>
-                <input type="text" id="first_name" class="form-control" placeholder="First name">
+                <input type="text" id="first_name" class="form-control">
             </div>
             <div class="col-6">
                 <label for="last_name" class="form-label">Last name</label>
-                <input type="text" id="last_name" class="form-control" placeholder="Last name">
+                <input type="text" id="last_name" class="form-control">
             </div>
         </div>
         <div class="mb-2">
             <label for="faculty_number" class="form-label">Faculty number</label>
-            <input type="text" id="faculty_number" class="form-control" placeholder="e.g. 12345">
+            <input type="text" id="faculty_number" class="form-control">
         </div>
         <div class="mb-2">
             <label for="email" class="form-label">Email</label>
-            <input type="email" id="email" class="form-control" placeholder="you@example.com">
+            <input type="email" id="email" class="form-control">
         </div>
         <div class="mb-4">
             <label for="password" class="form-label">Password</label>
-            <input type="password" id="password" class="form-control" placeholder="Password">
+            <input type="password" id="password" class="form-control">
         </div>
 
         <button onclick="register()" class="btn btn-primary w-100">Register</button>

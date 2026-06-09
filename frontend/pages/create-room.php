@@ -32,7 +32,9 @@
                 <label for="url" class="form-label">Meeting URL <span class="text-muted small">(optional)</span></label>
                 <input type="url" id="url" class="form-control">
             </div>
-            <button onclick="createRoom()" class="btn btn-primary">Create Room</button>
+            <div class="text-center mt-3">
+                <button onclick="createRoom()" class="btn btn-primary px-5">Create Room</button>
+            </div>
             <div id="msg" class="small mt-2"></div>
         </div>
     </div>

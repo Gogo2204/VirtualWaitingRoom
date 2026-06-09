@@ -7,11 +7,11 @@
 
         <div class="mb-3">
             <label for="email" class="form-label">Email</label>
-            <input type="email" id="email" class="form-control" placeholder="you@example.com" autofocus>
+            <input type="email" id="email" class="form-control" autofocus>
         </div>
         <div class="mb-4">
             <label for="password" class="form-label">Password</label>
-            <input type="password" id="password" class="form-control" placeholder="Password">
+            <input type="password" id="password" class="form-control">
         </div>
 
         <button onclick="login()" class="btn btn-primary w-100">Sign in</button>
