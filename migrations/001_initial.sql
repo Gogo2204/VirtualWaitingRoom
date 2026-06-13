@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS users (
     faculty_number VARCHAR(50),
     role ENUM('student', 'teacher', 'admin') NOT NULL,
     status ENUM('imported', 'registered', 'expired', 'deleted') DEFAULT 'imported',
+    profile_picture VARCHAR(255) NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;

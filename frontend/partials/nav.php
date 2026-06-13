@@ -38,8 +38,12 @@
         roleLinks = li('/rooms', 'Rooms');
     }
 
+    const _av = user.profile_picture
+        ? `<img src="${user.profile_picture}" alt="" class="avatar" style="width:28px;height:28px" onerror="this.onerror=null;this.src='/assets/img/default-avatar.svg'">`
+        : `<span class="avatar-initials" style="width:28px;height:28px;font-size:.65rem" aria-hidden="true">${((user.first_name?.[0]||'')+(user.last_name?.[0]||'')).toUpperCase()||'?'}</span>`;
+
     ul.innerHTML = roleLinks
-        + li('/profile', 'Profile')
+        + li('/profile', `${_av} Profile`)
         + `<li class="nav-item ms-md-2">
                <button class="btn btn-sm btn-outline-light"
                    onclick="localStorage.removeItem('token');localStorage.removeItem('user');window.location.href='/login'">

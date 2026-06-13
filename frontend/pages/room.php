@@ -8,7 +8,10 @@
 
     <!-- Room heading -->
     <div class="mb-3">
-        <h2 id="room-title" class="fw-bold mb-1"></h2>
+        <div class="d-flex align-items-center gap-3 flex-wrap mb-1">
+            <h2 id="room-title" class="fw-bold mb-0"></h2>
+            <span id="room-teacher" class="d-flex align-items-center gap-2"></span>
+        </div>
         <p id="room-description" class="text-muted mb-2"></p>
         <div class="d-flex align-items-center gap-2 flex-wrap">
             <span id="room-status-badge" class="sb"></span>
@@ -97,6 +100,10 @@ function renderRoomHeader(room) {
     const badge = document.getElementById('room-status-badge');
     badge.textContent = ROOM_STATUS_LABEL[room.status] ?? room.status;
     badge.className   = `sb sb-${room.status}`;
+
+    const av = mkAvatar(room.teacher_profile_picture, room.teacher_first_name, room.teacher_last_name, 'xs');
+    document.getElementById('room-teacher').innerHTML =
+        `<span class="text-muted small">by ${room.teacher_first_name} ${room.teacher_last_name} ${av}</span>`;
 }
 
 function buildComments(comments) {
@@ -187,9 +194,13 @@ function renderQueue(queue) {
                </div>`
             : '';
 
+        const av = mkAvatar(item.profile_picture, item.first_name, item.last_name, 'xs');
+
         return `<tr class="row-${item.status}">
             <td style="width:2.5rem">${idx + 1}</td>
-            <td style="width:14rem;text-align:left">${item.first_name} ${item.last_name}</td>
+            <td style="width:14rem;text-align:left">
+                <div class="d-flex align-items-center gap-2">${av}<span>${item.first_name} ${item.last_name}</span></div>
+            </td>
             <td style="width:10rem"><span class="sb sb-${item.status}">${STATUS_LABEL[item.status] ?? item.status}</span>${statusExtra}</td>
             <td style="width:8rem">${etaDisplay}${etaSetBtn}</td>
             <td style="text-align:left">${buildComments(item.comments)}${buildActions(item)}</td>

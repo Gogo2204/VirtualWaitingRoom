@@ -30,6 +30,12 @@ match (true) {
         $controller->listStudents();
     })(),
 
+    $method === 'POST' && $path === '/api/users/avatar' => (function () {
+        AuthMiddleware::require('student', 'teacher', 'admin');
+        $controller = new UserController(new UserService(new User(getDb())));
+        $controller->uploadAvatar();
+    })(),
+
     $method === 'GET' && $path === '/api/users/profile' => (function () {
         AuthMiddleware::require('student', 'teacher', 'admin');
         $controller = new UserController(new UserService(new User(getDb())));
