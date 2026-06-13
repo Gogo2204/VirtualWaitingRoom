@@ -852,3 +852,17 @@ a.text-decoration-none:hover {
   width: auto;
   max-width: none;
 }
+
+.grade-badge {
+    display: inline-block;
+    padding: 0.2em 0.55em;
+    font-size: 0.9rem;
+    font-weight: 700;
+    line-height: 1;
+    color: #fff;
+    background-color: 
+  #1558b0;
+    border-radius: 0.3rem;
+    white-space: nowrap;
+    vertical-align: baseline;
+  }

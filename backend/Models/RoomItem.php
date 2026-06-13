@@ -188,4 +188,16 @@ class RoomItem extends Model
             $update->execute([$minutesFromNow, $row['id']]);
         }
     }
+    
+    public function findByRoomAndStudent(int $roomId, int $studentId): array|false
+    {
+        $stmt = $this->db->prepare("
+            SELECT * FROM room_items
+            WHERE room_id = ? AND student_id = ?
+            ORDER BY created_at DESC
+            LIMIT 1
+        ");
+        $stmt->execute([$roomId, $studentId]);
+        return $stmt->fetch(\PDO::FETCH_ASSOC);
+    }
 }

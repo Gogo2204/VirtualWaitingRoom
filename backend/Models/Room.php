@@ -36,15 +36,16 @@ class Room extends Model
     public function getQueue(int $roomId): array
     {
         $stmt = $this->db->prepare("
-            SELECT ri.*, u.first_name, u.last_name
+            SELECT ri.*, u.first_name, u.last_name, g.grade
             FROM room_items ri
             JOIN users u ON u.id = ri.student_id
+            LEFT JOIN grades g ON g.room_id = ri.room_id AND g.student_id = ri.student_id
             WHERE ri.room_id = ?
             ORDER BY ri.position
         ");
-
+    
         $stmt->execute([$roomId]);
-
+    
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
 

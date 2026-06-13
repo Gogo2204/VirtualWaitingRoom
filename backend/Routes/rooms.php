@@ -11,6 +11,9 @@ use App\Models\Comment;
 use App\Models\Subject;
 use App\Models\TeacherStudent;
 use App\Models\RoomHistory;
+use App\Controllers\GradeController;
+use App\Services\GradeService;
+use App\Models\Grade;
 
 function makeCommentController(): CommentController
 {
@@ -31,6 +34,16 @@ function makeRoomController(): RoomController
         new Subject($db),
         new TeacherStudent($db),
         new RoomHistory($db)
+    ));
+}
+
+function makeGradeController(): GradeController
+{
+    $db = getDb();
+    return new GradeController(new GradeService(
+        new Grade($db),
+        new Room($db),
+        new RoomItem($db)
     ));
 }
 
@@ -126,6 +139,21 @@ match (true) {
     $method === 'GET' && $roomId !== null && $segment3 === 'queue' && $itemId !== null && $segment5 === 'comments' => (function () use ($itemId) {
         AuthMiddleware::require('teacher', 'student');
         makeCommentController()->list($itemId);
+    })(),
+
+    $method === 'GET' && $roomId !== null && $segment3 === 'grades' && $segment4 === null => (function () use ($roomId) {
+        AuthMiddleware::require('teacher');
+        makeGradeController()->getRoomGrades($roomId);
+    })(),
+
+    $method === 'POST' && $roomId !== null && $segment3 === 'grades' && $segment4 === null => (function () use ($roomId) {
+        AuthMiddleware::require('teacher');
+        makeGradeController()->setGrade($roomId);
+    })(),
+
+    $method === 'DELETE' && $roomId !== null && $segment3 === 'grades' && $segment4 !== null => (function () use ($roomId, $segment4) {
+        AuthMiddleware::require('teacher');
+        makeGradeController()->deleteGrade($roomId, (int)$segment4);
     })(),
 
     default => (function () {

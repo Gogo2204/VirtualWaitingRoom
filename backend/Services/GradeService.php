@@ -9,55 +9,92 @@ use App\Models\RoomItem;
 class GradeService
 {
     public function __construct(
-        private \PDO $db,
-        private Grade $gradeModel,
-        private Room $roomModel,
+        private Grade    $gradeModel,
+        private Room     $roomModel,
         private RoomItem $roomItemModel
     ) {}
 
-    public function createOrUpdateGrade(
-        int $teacherId,
-        int $roomId,
-        int $roomItemId,
-        float $grade
-    ): array {
+    public function setGrade(int $teacherId, int $roomId, array $data): array
+    {
         $room = $this->roomModel->findById($roomId);
-        if (!$room || (int)$room['teacher_id'] !== $teacherId) {
-            throw new \Exception("Unauthorized: Room does not belong to teacher");
+
+        if (!$room) {
+            throw new \InvalidArgumentException('Room not found.');
         }
 
-        $item = $this->roomItemModel->findById($roomItemId);
-        if (!$item || (int)$item['room_id'] !== $roomId) {
-            throw new \Exception("Invalid room item");
+        if ((int)$room['teacher_id'] !== $teacherId) {
+            throw new \RuntimeException('Forbidden.');
         }
 
-        $studentId = (int)$item['student_id'];
+        $studentId = (int)($data['student_id'] ?? 0);
+        $grade     = $data['grade'] ?? null;
 
-        $existing = $this->gradeModel->findByStudentAndRoom($studentId, $roomId);
-
-        if ($existing) {
-            $this->gradeModel->updateGrade($studentId, $roomId, $grade);
-            return [
-                'updated' => true,
-                'grade' => $this->gradeModel->findByStudentAndRoom($studentId, $roomId)
-            ];
+        if ($studentId <= 0) {
+            throw new \InvalidArgumentException('student_id is required.');
         }
 
-        $id = $this->gradeModel->create($roomItemId, $studentId, $roomId, $grade);
+        if ($grade === null || !is_numeric($grade)) {
+            throw new \InvalidArgumentException('A numeric grade is required.');
+        }
 
-        return [
-            'created' => true,
-            'grade' => $this->gradeModel->findById($id)
-        ];
+        $grade = (float)$grade;
+
+        if ($grade < 2 || $grade > 6) {
+            throw new \InvalidArgumentException('Grade must be between 2 and 6.');
+        }
+
+        $item = $this->roomItemModel->findByRoomAndStudent($roomId, $studentId);
+
+        if (!$item) {
+            throw new \InvalidArgumentException('Student has no queue entry in this room.');
+        }
+
+        $id = $this->gradeModel->upsert([
+            'room_item_id' => (int)$item['id'],
+            'student_id'   => $studentId,
+            'room_id'      => $roomId,
+            'grade'        => $grade,
+        ]);
+
+        return $this->gradeModel->findById($id);
     }
 
-    public function getGradesForRoom(int $roomId): array
+    public function getGradesForRoom(int $teacherId, int $roomId): array
     {
-        return $this->gradeModel->getByRoom($roomId);
+        $room = $this->roomModel->findById($roomId);
+
+        if (!$room) {
+            throw new \InvalidArgumentException('Room not found.');
+        }
+
+        if ((int)$room['teacher_id'] !== $teacherId) {
+            throw new \RuntimeException('Forbidden.');
+        }
+
+        return $this->gradeModel->findByRoom($roomId);
     }
 
     public function getGradesForStudent(int $studentId): array
     {
-        return $this->gradeModel->getByStudent($studentId);
+        return $this->gradeModel->findByStudent($studentId);
+    }
+
+    public function deleteGrade(int $teacherId, int $roomId, int $studentId): void
+    {
+        $room = $this->roomModel->findById($roomId);
+
+        if (!$room) {
+            throw new \InvalidArgumentException('Room not found.');
+        }
+
+        if ((int)$room['teacher_id'] !== $teacherId) {
+            throw new \RuntimeException('Forbidden.');
+        }
+
+        $deleted = $this->gradeModel->deleteByRoomAndStudent($roomId, $studentId);
+
+        if (!$deleted) {
+            throw new \InvalidArgumentException('Grade not found.');
+        }
     }
 }

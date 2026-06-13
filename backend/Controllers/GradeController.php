@@ -7,51 +7,62 @@ use App\Middleware\AuthMiddleware;
 
 class GradeController
 {
-    public function __construct(
-        private GradeService $gradeService
-    ) {}
+    public function __construct(private GradeService $gradeService) {}
 
-    public function createOrUpdate(array $params)
+    public function setGrade(int $roomId): void
     {
-        AuthMiddleware::require('teacher');
-
-        $teacherId = $_SESSION['user_id'];
-        $roomId = (int)$params['room_id'];
-        $roomItemId = (int)$params['item_id'];
-
-        $input = json_decode(file_get_contents('php://input'), true);
-        $grade = (float)$input['grade'];
-
-        if ($grade < 2 || $grade > 6) {
-            return json_encode(['error' => 'Grade must be between 2 and 6']);
-        }
+        $user = AuthMiddleware::user();
+        $body = json_decode(file_get_contents('php://input'), true) ?? [];
 
         try {
-            $result = $this->gradeService->createOrUpdateGrade(
-                $teacherId,
-                $roomId,
-                $roomItemId,
-                $grade
-            );
-            return json_encode($result);
-        } catch (\Exception $e) {
-            return json_encode(['error' => $e->getMessage()]);
+            $grade = $this->gradeService->setGrade((int)$user['sub'], $roomId, $body);
+            http_response_code(200);
+            echo json_encode(['success' => true, 'grade' => $grade]);
+        } catch (\InvalidArgumentException $e) {
+            http_response_code(422);
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        } catch (\RuntimeException $e) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
         }
     }
 
-    public function getByStudent(array $params)
+    public function getRoomGrades(int $roomId): void
     {
-        AuthMiddleware::require('teacher', 'admin');
+        $user = AuthMiddleware::user();
 
-        $studentId = (int)$params['student_id'];
-        return json_encode($this->gradeService->getGradesForStudent($studentId));
+        try {
+            $grades = $this->gradeService->getGradesForRoom((int)$user['sub'], $roomId);
+            echo json_encode(['success' => true, 'grades' => $grades]);
+        } catch (\InvalidArgumentException $e) {
+            http_response_code(404);
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        } catch (\RuntimeException $e) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
     }
 
-    public function getByRoom(array $params)
+    public function getMyGrades(): void
     {
-        AuthMiddleware::require('teacher', 'admin');
+        $user   = AuthMiddleware::user();
+        $grades = $this->gradeService->getGradesForStudent((int)$user['sub']);
+        echo json_encode(['success' => true, 'grades' => $grades]);
+    }
 
-        $roomId = (int)$params['room_id'];
-        return json_encode($this->gradeService->getGradesForRoom($roomId));
+    public function deleteGrade(int $roomId, int $studentId): void
+    {
+        $user = AuthMiddleware::user();
+
+        try {
+            $this->gradeService->deleteGrade((int)$user['sub'], $roomId, $studentId);
+            echo json_encode(['success' => true]);
+        } catch (\InvalidArgumentException $e) {
+            http_response_code(404);
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        } catch (\RuntimeException $e) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
     }
 }

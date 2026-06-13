@@ -17,9 +17,10 @@ if (str_starts_with($path, '/api/auth')) {
     require_once __DIR__ . '/admin.php';
 } elseif (str_starts_with($path, '/api/users')) {
     require_once __DIR__ . '/users.php';
+} elseif (str_starts_with($path, '/api/grades')) {
+    require_once __DIR__ . '/grades.php';
 } elseif (str_starts_with($path, '/api/rooms')) {
     require_once __DIR__ . '/rooms.php';
-    require_once __DIR__ . '/grades.php';
 } elseif (str_starts_with($path, '/api/subjects')) {
     require_once __DIR__ . '/subjects.php';
 } elseif (str_starts_with($path, '/api/stats')) {

@@ -68,6 +68,8 @@ let   myItem     = null;
 const today      = new Date().toISOString().slice(0, 10);
 const openSlotIds = new Set();
 
+const gradeEditIds = new Set();
+
 const STATUS_LABEL = {
     waiting:      'Waiting',
     invited_temp: 'Temp. invited',
@@ -109,6 +111,53 @@ function buildComments(comments) {
             </div>`;
         }).join('')
         + '</div>';
+}
+
+/**
+ * Builds the grade cell content for a queue row.
+ *
+ * Visibility rules:
+ *  - Grade display (static): visible to everyone once a grade exists.
+ *  - Grade input: only teachers; only when status is 'invited_perm' or 'done';
+ *    shown when there's no grade yet OR the teacher clicked "Edit".
+ */
+function buildGradeCell(item) {
+    const hasGrade   = item.grade != null;
+    const canGrade   = user.role === 'teacher'
+                       && (item.status === 'invited_perm' || item.status === 'done');
+    const inEditMode = gradeEditIds.has(item.id);
+    const showInput  = canGrade && (!hasGrade || inEditMode);
+
+    let html = '';
+
+    if (hasGrade) {
+        html += `<span class="grade-badge" id="grade-display-${item.id}">${parseFloat(item.grade).toFixed(2)}</span>`;
+    }
+
+    if (showInput) {
+        const currentVal = hasGrade ? parseFloat(item.grade).toFixed(2) : '';
+        html += `<div class="d-flex gap-1 align-items-center mt-1" id="grade-input-wrap-${item.id}">
+            <input
+                type="number"
+                id="grade-input-${item.id}"
+                class="form-control form-control-sm"
+                style="width:80px"
+                min="2" max="6" step="0.01"
+                placeholder="2–6"
+                value="${currentVal}"
+            >
+            <button class="btn btn-sm btn-outline-primary py-0 px-1" onclick="saveGrade(${item.id}, ${item.student_id})">✓</button>
+            ${hasGrade
+                ? `<button class="btn btn-sm btn-outline-secondary py-0 px-1" onclick="cancelGradeEdit(${item.id})">✕</button>`
+                : ''}
+        </div>`;
+    }
+
+    if (canGrade && hasGrade && !inEditMode) {
+        html += `<div class="mt-1"><button class="btn btn-sm btn-outline-secondary" onclick="startGradeEdit(${item.id})">Edit</button></div>`;
+    }
+
+    return html;
 }
 
 function buildActions(item) {
@@ -187,11 +236,12 @@ function renderQueue(queue) {
                </div>`
             : '';
 
-        return `<tr class="row-${item.status}">
+        return `<tr class="row-${item.status}" data-student-id="${item.student_id}">
             <td style="width:2.5rem">${idx + 1}</td>
             <td style="width:14rem;text-align:left">${item.first_name} ${item.last_name}</td>
             <td style="width:10rem"><span class="sb sb-${item.status}">${STATUS_LABEL[item.status] ?? item.status}</span>${statusExtra}</td>
             <td style="width:8rem">${etaDisplay}${etaSetBtn}</td>
+            <td style="width:9rem">${buildGradeCell(item)}</td>
             <td style="text-align:left">${buildComments(item.comments)}${buildActions(item)}</td>
         </tr>`;
     }).join('');
@@ -204,6 +254,7 @@ function renderQueue(queue) {
                     <th style="width:14rem">Student</th>
                     <th style="width:10rem">Status</th>
                     <th style="width:6rem">ETA</th>
+                    <th style="width:9rem">Grade</th>
                     <th>Comments</th>
                 </tr>
             </thead>
@@ -253,6 +304,12 @@ async function loadQueue() {
             saved[id] = { text: el.value, vis: document.getElementById(`vis-${id}`)?.value ?? 'public' };
         });
 
+        const savedGrades = {};
+        document.querySelectorAll('[id^="grade-input-"]').forEach(el => {
+            const id = el.id.slice('grade-input-'.length);
+            if (el.value) savedGrades[id] = el.value;
+        });
+
         const savedSlotDates = {};
         openSlotIds.forEach(id => {
             savedSlotDates[id] = document.getElementById(`slot-date-${id}`)?.value || today;
@@ -267,6 +324,11 @@ async function loadQueue() {
             const visEl = document.getElementById(`vis-${id}`);
             if (cmtEl && text) cmtEl.value = text;
             if (visEl) visEl.value = vis;
+        });
+
+        Object.entries(savedGrades).forEach(([id, val]) => {
+            const el = document.getElementById(`grade-input-${id}`);
+            if (el) el.value = val;
         });
 
         const bulkTime  = document.getElementById('eta-all-input')?.value || '';
@@ -302,6 +364,34 @@ async function loadStats() {
         const data = await api('GET', `/api/stats/rooms/${roomId}`);
         renderStats(data.stats);
     } catch { /* supplemental */ }
+}
+
+
+function startGradeEdit(itemId) {
+    gradeEditIds.add(itemId);
+    loadQueue();
+}
+
+function cancelGradeEdit(itemId) {
+    gradeEditIds.delete(itemId);
+    loadQueue();
+}
+
+async function saveGrade(itemId, studentId) {
+    const input = document.getElementById(`grade-input-${itemId}`);
+    if (!input) return;
+    const raw = parseFloat(input.value);
+    if (isNaN(raw) || raw < 2 || raw > 6) {
+        setMsg('msg', 'Grade must be between 2 and 6.');
+        return;
+    }
+    const grade = Math.round(raw * 100) / 100;
+    try {
+        await api('POST', `/api/rooms/${roomId}/grades`, { student_id: studentId, grade });
+        gradeEditIds.delete(itemId);
+        setMsg('msg', `Grade ${grade.toFixed(2)} saved.`, 'success');
+        loadQueue();
+    } catch (err) { setMsg('msg', err.message); }
 }
 
 function toggleSlot(itemId) {
