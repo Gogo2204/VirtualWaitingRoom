@@ -33,10 +33,25 @@ class Room extends Model
         return (int)$this->db->lastInsertId();
     }
 
+    public function findByIdWithTeacher(int $id): ?array
+    {
+        $stmt = $this->db->prepare("
+            SELECT r.*,
+                   u.first_name AS teacher_first_name,
+                   u.last_name  AS teacher_last_name,
+                   u.profile_picture AS teacher_profile_picture
+            FROM rooms r
+            JOIN users u ON u.id = r.teacher_id
+            WHERE r.id = ?
+        ");
+        $stmt->execute([$id]);
+        return $stmt->fetch(\PDO::FETCH_ASSOC) ?: null;
+    }
+
     public function getQueue(int $roomId): array
     {
         $stmt = $this->db->prepare("
-            SELECT ri.*, u.first_name, u.last_name
+            SELECT ri.*, u.first_name, u.last_name, u.profile_picture
             FROM room_items ri
             JOIN users u ON u.id = ri.student_id
             WHERE ri.room_id = ?

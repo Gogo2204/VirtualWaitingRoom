@@ -141,6 +141,56 @@ class UserService
         return $user;
     }
 
+    public function uploadAvatar(int $userId, array $file): array
+    {
+        if ($file['error'] !== UPLOAD_ERR_OK) {
+            throw new \InvalidArgumentException('Upload failed (code ' . $file['error'] . ').');
+        }
+
+        if ($file['size'] > 2 * 1024 * 1024) {
+            throw new \InvalidArgumentException('Image must be under 2 MB.');
+        }
+
+        $finfo    = new \finfo(FILEINFO_MIME_TYPE);
+        $mimeType = $finfo->file($file['tmp_name']);
+
+        $extMap = [
+            'image/jpeg' => 'jpg',
+            'image/png'  => 'png',
+            'image/gif'  => 'gif',
+            'image/webp' => 'webp',
+        ];
+
+        if (!isset($extMap[$mimeType])) {
+            throw new \InvalidArgumentException('Only JPEG, PNG, GIF and WebP images are allowed.');
+        }
+
+        $uploadDir = __DIR__ . '/../../public/assets/uploads/avatars/';
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0755, true);
+        }
+
+        $user = $this->userModel->findById($userId);
+        if ($user && !empty($user['profile_picture'])) {
+            $oldFile = __DIR__ . '/../../public' . $user['profile_picture'];
+            if (is_file($oldFile)) {
+                unlink($oldFile);
+            }
+        }
+
+        $filename = $userId . '_' . bin2hex(random_bytes(8)) . '.' . $extMap[$mimeType];
+        if (!move_uploaded_file($file['tmp_name'], $uploadDir . $filename)) {
+            throw new \RuntimeException('Failed to save image.', 500);
+        }
+
+        $webPath = '/assets/uploads/avatars/' . $filename;
+        $this->userModel->update($userId, ['profile_picture' => $webPath]);
+
+        $updated = $this->userModel->findById($userId);
+        unset($updated['password_hash']);
+        return $updated;
+    }
+
     private function generateTempPassword(int $length = 12): string
     {
         $chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%';

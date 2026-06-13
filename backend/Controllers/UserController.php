@@ -67,6 +67,29 @@ class UserController
         }
     }
 
+    public function uploadAvatar(): void
+    {
+        $user = AuthMiddleware::user();
+
+        if (empty($_FILES['avatar'])) {
+            http_response_code(422);
+            echo json_encode(['success' => false, 'message' => 'No file uploaded.']);
+            return;
+        }
+
+        try {
+            $result = $this->userService->uploadAvatar((int)$user['sub'], $_FILES['avatar']);
+            echo json_encode(['success' => true, 'user' => $result]);
+        } catch (\InvalidArgumentException $e) {
+            http_response_code(422);
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        } catch (\RuntimeException $e) {
+            $code = (int)$e->getCode();
+            http_response_code($code >= 400 && $code < 600 ? $code : 500);
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+
     public function listStudents(): void
     {
         $teacherId = (int)AuthMiddleware::user()['sub'];

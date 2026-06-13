@@ -4,6 +4,21 @@
 <div class="container-lg py-4" style="max-width:640px">
     <h4 class="fw-bold mb-4">Profile</h4>
 
+    <!-- Profile picture -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body text-center">
+            <p class="page-section-title text-start">Profile Picture</p>
+            <div id="avatar-display" class="mb-3"></div>
+            <div class="d-flex justify-content-center align-items-center gap-2 flex-wrap">
+                <input type="file" id="avatar-input" class="form-control form-control-sm"
+                    accept="image/jpeg,image/png,image/gif,image/webp" style="max-width:240px">
+                <button onclick="uploadAvatar()" class="btn btn-sm btn-outline-primary">Upload</button>
+            </div>
+            <div class="small text-muted mt-1">JPEG, PNG, GIF or WebP · max 2 MB</div>
+            <div id="avatar-msg" class="small mt-2"></div>
+        </div>
+    </div>
+
     <!-- Personal info -->
     <div class="card border-0 shadow-sm mb-4">
         <div class="card-body">
@@ -58,6 +73,11 @@
 <script>
 requireAuth();
 
+function renderAvatarDisplay(u) {
+    document.getElementById('avatar-display').innerHTML =
+        mkAvatar(u.profile_picture, u.first_name, u.last_name, 'lg');
+}
+
 async function loadProfile() {
     try {
         const data = await api('GET', '/api/users/profile');
@@ -68,8 +88,29 @@ async function loadProfile() {
         let meta = `Role: <strong>${u.role}</strong>`;
         if (u.faculty_number) meta += ` &nbsp;·&nbsp; Faculty No: <strong>${u.faculty_number}</strong>`;
         document.getElementById('profile-meta').innerHTML = meta;
+        renderAvatarDisplay(u);
     } catch (err) {
         setMsg('profile-msg', err.message);
+    }
+}
+
+async function uploadAvatar() {
+    const input = document.getElementById('avatar-input');
+    const file  = input.files?.[0];
+    if (!file) { setMsg('avatar-msg', 'Please choose a file first.'); return; }
+
+    const fd = new FormData();
+    fd.append('avatar', file);
+
+    try {
+        const data   = await uploadFile('/api/users/avatar', fd);
+        const stored = JSON.parse(localStorage.getItem('user') || '{}');
+        localStorage.setItem('user', JSON.stringify({ ...stored, profile_picture: data.user.profile_picture }));
+        renderAvatarDisplay(data.user);
+        input.value = '';
+        setMsg('avatar-msg', 'Photo updated.', 'success');
+    } catch (err) {
+        setMsg('avatar-msg', err.message);
     }
 }
 

@@ -63,7 +63,7 @@ class RoomService
 
     public function getQueue(int $roomId, int $requesterId): array
     {
-        $room = $this->roomModel->findById($roomId);
+        $room = $this->roomModel->findByIdWithTeacher($roomId);
         if (!$room) {
             throw new \RuntimeException('Room not found.', 404);
         }
@@ -105,11 +105,14 @@ class RoomService
 
         return [
             'room' => [
-                'id'          => (int)$room['id'],
-                'name'        => $room['name'],
-                'description' => $room['description'] ?? '',
-                'status'      => $room['status'],
-                'url'         => $room['url'] ?? '',
+                'id'                      => (int)$room['id'],
+                'name'                    => $room['name'],
+                'description'             => $room['description'] ?? '',
+                'status'                  => $room['status'],
+                'url'                     => $room['url'] ?? '',
+                'teacher_first_name'      => $room['teacher_first_name'],
+                'teacher_last_name'       => $room['teacher_last_name'],
+                'teacher_profile_picture' => $room['teacher_profile_picture'],
             ],
             'queue' => $items,
         ];
