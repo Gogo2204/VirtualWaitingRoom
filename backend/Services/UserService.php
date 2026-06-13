@@ -160,8 +160,46 @@ class UserService
             . "Password: {$tempPassword}\n\n"
             . "Please log in and change your password.\n";
 
-        $headers = 'From: ' . ($_ENV['MAIL_FROM'] ?? 'noreply@waitingRoOm.com');
+        $from = $_ENV['MAIL_FROM'] ?? 'noreply@waitingroom.com';
+        $fromName = $_ENV['MAIL_FROM_NAME'] ?? 'Virtual Waiting Room';
 
+        $useSmtp =
+            !empty($_ENV['SMTP_HOST']) &&
+            !empty($_ENV['SMTP_PORT']) &&
+            !empty($_ENV['SMTP_USER']) &&
+            !empty($_ENV['SMTP_PASS']);
+
+        if ($useSmtp) {
+            try {
+                $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
+                $mail->isSMTP();
+                $mail->Host = $_ENV['SMTP_HOST'];
+                $mail->SMTPAuth = true;
+                $mail->Username = $_ENV['SMTP_USER'];
+                $mail->Password = $_ENV['SMTP_PASS'];
+                $mail->Port = (int) $_ENV['SMTP_PORT'];
+                $mail->CharSet = 'UTF-8';
+
+                $secure = strtolower($_ENV['SMTP_SECURE'] ?? 'tls');
+                if ($secure === 'tls') {
+                    $mail->SMTPSecure = \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
+                } elseif ($secure === 'ssl') {
+                    $mail->SMTPSecure = \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS;
+                }
+
+                $mail->setFrom($from, $fromName);
+                $mail->addAddress($to, $firstName);
+                $mail->Subject = $subject;
+                $mail->Body = $message;
+
+                $mail->send();
+                return;
+            } catch (\Throwable $e) {
+                error_log("SMTP mail failed for {$to}: " . $e->getMessage());
+            }
+        }
+
+        $headers = 'From: ' . $from;
         $sent = mail($to, $subject, $message, $headers);
 
         if (!$sent) {
